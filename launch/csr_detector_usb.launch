@@ -1,6 +1,27 @@
 <launch>
-    <!-- Default values -->
-    <arg name="enable_marker_detector" default="true" />
+
+    <!-- Default values for Sensors -->
+    <arg name="camera1_port" default="/dev/video2" />
+    <arg name="camera2_port" default="/dev/video4" />
+    <arg name="brightness_alpha" default="1.0" />       <!-- Setting camera's brightness (alpha) -->
+    <arg name="brightness_beta" default="0" />          <!-- Setting camera's brightness  (beta) -->
+    <!-- Default values for Markers -->
+    <arg name="leftHanded" default="true" />            <!-- CSR marker's charactristics -->
+    <!-- Default values for Pre-processing -->
+    <arg name="fpsBoost" default="true" />              <!-- Enabling fps boost -->
+    <arg name="channel" default="g" />                  <!-- Enabling RGB channels (options: all, r, g, b) -->
+    <!-- Default values for Processing -->
+    <arg name="goodMatchPercentage" default="0.4" />    <!-- Alignment matching percentage -->
+    <arg name="preAligment" default="true" />           <!-- Apply a defined homography-matrix -->
+    <arg name="flipImage" default="true" />             <!-- Flipping an image due to beamsplitter -->
+    <arg name="enableCircularROI" default="false" />    <!-- Enabling circular mask for USB cameras -->
+    <arg name="maxFeatures" default="500" />            <!-- Maximum number of features for alignment -->
+    <arg name="circlularMaskCoverage" default="0.8" />  <!-- Circular mask for USB cameras (between 0 and 1) -->
+    <!-- Default values for Processing -->
+    <arg name="erodeKernelSize" default="3" />          <!-- Erosion kernel (between 1 and 50) -->
+    <arg name="gaussianBlurKernelSize" default="3" />   <!-- Gaussian blur kernel (only odd values) -->
+    <arg name="thresholdMethod" default="binary" />     <!-- Thresholding method (options: both, binary, otsu) -->
+    <arg name="threshold" default="30" />               <!-- Threshold for separating layers (between 0 and 255) -->
 
     <!-- Main node -->
     <node name="orb_slam3" pkg="orb_slam3_ros" type="ros_mono" output="screen">

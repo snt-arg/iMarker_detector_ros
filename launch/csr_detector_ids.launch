@@ -1,5 +1,29 @@
 <launch>
     
+    <!-- Default values for Sensors -->
+    <arg name="exposureTime" default="20000" />         <!-- Setting camera's exposure time -->
+    <arg name="brightness_alpha" default="1.0" />       <!-- Setting camera's brightness (alpha) -->
+    <arg name="brightness_beta" default="0" />          <!-- Setting camera's brightness  (beta) -->
+    <arg name="realSenseFps" default="30" />            <!-- Frame-rate of the sensor -->
+    <arg name="realSenseResolution_w" default="640" />  <!-- Resolution of the frames in RealSense -->
+    <arg name="realSenseResolution_h" default="480" />  <!-- Resolution of the frames in RealSense -->
+    <!-- Default values for Markers -->
+    <arg name="leftHanded" default="true" />            <!-- CSR marker's charactristics -->
+    <!-- Default values for Pre-processing -->
+    <arg name="channel" default="g" />                  <!-- Enabling RGB channels (options: all, r, g, b) -->
+    <!-- Default values for Processing -->
+    <arg name="goodMatchPercentage" default="0.4" />    <!-- Alignment matching percentage -->
+    <arg name="preAligment" default="true" />           <!-- Apply a defined homography-matrix -->
+    <arg name="flipImage" default="true" />             <!-- Flipping an image due to beamsplitter -->
+    <arg name="enableCircularROI" default="false" />    <!-- Enabling circular mask for USB cameras -->
+    <arg name="maxFeatures" default="500" />            <!-- Maximum number of features for alignment -->
+    <arg name="circlularMaskCoverage" default="0.8" />  <!-- Circular mask for USB cameras (between 0 and 1) -->
+    <!-- Default values for Processing -->
+    <arg name="erodeKernelSize" default="3" />          <!-- Erosion kernel (between 1 and 50) -->
+    <arg name="gaussianBlurKernelSize" default="3" />   <!-- Gaussian blur kernel (only odd values) -->
+    <arg name="thresholdMethod" default="binary" />     <!-- Thresholding method (options: both, binary, otsu) -->
+    <arg name="threshold" default="30" />               <!-- Threshold for separating layers (between 0 and 255) -->
+    
     <!-- Visualization -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
 
