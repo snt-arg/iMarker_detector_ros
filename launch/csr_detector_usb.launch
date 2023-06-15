@@ -1,0 +1,19 @@
+<launch>
+    <!-- Default values -->
+    <arg name="enable_marker_detector" default="true" />
+
+    <!-- Main node -->
+    <node name="orb_slam3" pkg="orb_slam3_ros" type="ros_mono" output="screen">
+        
+        <!-- Parameters for ArUco marker detection -->
+        <param name="enable_marker_detection" type="bool" value="$(arg enable_marker_detector)" />
+
+        <!-- Parameters for ROS -->
+        <param name="roll" type="double" value="0" />
+
+    </node>
+    
+    <!-- Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
+
+</launch>

@@ -1,0 +1,6 @@
+<launch>
+    
+    <!-- Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/mono_camera.rviz" output="screen" />
+
+</launch>
