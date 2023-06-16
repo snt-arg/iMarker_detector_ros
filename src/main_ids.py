@@ -1,19 +1,14 @@
+#!/usr/bin/env python3
+
 import cv2 as cv
 import numpy as np
-import PySimpleGUI as sg
-from src.gui.guiElements import guiElements
 from src.csr_sensors.sensors import sensorIDS
 from src.csr_detector.process import processFrames
-from config import roiDimension, exposureTime, windowLocation
+from config import roiDimension, exposureTime
 from config import preAligment, homographyMat, windowWidth, sensorProjectRoot
 
 
 def main():
-
-    # Create the window
-    windowTitle, tabGroup, imageViewer = guiElements()
-    window = sg.Window(
-        windowTitle, [tabGroup, imageViewer], location=windowLocation)
 
     cap1 = sensorIDS.idsCamera(0)
     cap2 = sensorIDS.idsCamera(1)
@@ -36,11 +31,6 @@ def main():
     cap2.setExposureTime(exposureTime)
 
     while True:
-        event, values = window.read(timeout=10)
-
-        # End program if user closes window
-        if event == "Exit" or event == sg.WIN_CLOSED:
-            break
 
         frame1 = cap1.getFrame()
         frame2 = cap2.getFrame()
@@ -75,7 +65,6 @@ def main():
 
         # Show the frames
         frame = cv.imencode(".png", frame)[1].tobytes()
-        window['Frames'].update(data=frame)
 
     window.close()
     cap1.closeLibrary()

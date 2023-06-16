@@ -12,7 +12,7 @@ Create a new workspace and clone the repo in its `src` folder. This repo has som
 git clone --recurse-submodules git@github.com:snt-arg/csr_detector_ros.git
 ```
 
-You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`. After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/csr_detector_ros_ws/devel/setup.sh'` in your `.bashrc` file.
+You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`. After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/csr_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
 
 ### II. Installing Libraries
 
@@ -25,6 +25,8 @@ pip install numpy opencv-python
 ### III. Installing Submodule Packages
 
 The next step is to intall the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory. Then, run `pip install -e .` in the **root directory** to install the package and its dependencies. You can also run the same command in the submodules directories to install them.
+
+<!-- rosrun csr_detector_ros main_usb.py -->
 
 ## 🤖 ROS Topics and Params
 

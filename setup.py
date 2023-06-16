@@ -1,11 +1,13 @@
-from distutils.core import setup
+#!/usr/bin/env python3
 
-setup(name='csr_detector_ros',
-      version='1.0',
-      author='Ali Tourani',
-      description='CSR detector with ROS wrapper',
-      url='https://github.com/snt-arg/csr_detector_standalone',
-      packages=['csr_sensors', 'csr_detector'],
-      package_dir={'csr_detector': 'src/csr_detector',
-                   'csr_sensors': 'src/csr_sensors'}
-      )
+from distutils.core import setup
+from catkin_pkg.python_setup import generate_distutils_setup
+
+d = generate_distutils_setup(
+    packages=['csr_sensors', 'csr_detector'],
+    package_dir={'csr_sensors': 'src/csr_sensors',  # Packages within the ROS workspace
+                 'csr_detector': 'src/csr_detector'  # Location of the packages
+                 }
+)
+
+setup(**d)
