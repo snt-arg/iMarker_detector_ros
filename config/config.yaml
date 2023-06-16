@@ -1,0 +1,41 @@
+# Configuration file for Double iDS camera setup
+
+sensor: {
+  exposureTime: 20000,
+  brightness: {
+    alpha: 1.0,
+    beta: 0.0,
+  },
+  realSenseFps: 30,
+  realSenseResolution: {
+    width: 640,
+    height: 480,
+  }
+}
+
+markers: {
+  leftHanded: true,
+}
+
+preProcessing: {
+  channel: 'g',
+}
+
+processing: {
+  flipImage: true,
+  maxFeatures: 500,
+  preAligment: true,
+  goodMatchPercentage: 0.4,
+  enableCircularROI: false,
+  circlularMaskCoverage: 0.8,
+}
+
+postProcessing: {
+  
+}
+
+<!-- Default values for Processing -->
+<arg name="erodeKernelSize" default="3" />          <!-- Erosion kernel (between 1 and 50) -->
+<arg name="gaussianBlurKernelSize" default="3" />   <!-- Gaussian blur kernel (only odd values) -->
+<arg name="thresholdMethod" default="binary" />     <!-- Thresholding method (options: both, binary, otsu) -->
+<arg name="threshold" default="30" />               <!-- Threshold for separating layers (between 0 and 255) -->

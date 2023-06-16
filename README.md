@@ -26,6 +26,10 @@ pip install numpy opencv-python
 
 The next step is to intall the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory. Then, run `pip install -e .` in the **root directory** to install the package and its dependencies. You can also run the same command in the submodules directories to install them.
 
+### IV. Build Catkin Package
+
+Finally, when everything has been installed, you can run `catkin build` to build the files.
+
 <!-- rosrun csr_detector_ros main_usb.py -->
 
 ## 🤖 ROS Topics and Params
