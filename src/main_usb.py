@@ -7,9 +7,11 @@ from config import ports, fpsBoost, flipImage, preAligment, homographyMat, windo
 
 
 def main():
+    print('Hello USB')
+
     # Camera
-    capL = usb.createCameraObject(ports['lCam'])
-    capR = usb.createCameraObject(ports['rCam'])
+    # capL = usb.createCameraObject(ports['lCam'])
+    # capR = usb.createCameraObject(ports['rCam'])
 
     # if fpsBoost:
     #     capL.set(cv.CAP_PROP_FPS, 30.0)

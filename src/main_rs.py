@@ -8,43 +8,45 @@ from config import realSenseResolution, realSenseFps, windowWidth
 
 
 def main():
-    rs = sensorRealSense.rsCamera(realSenseResolution, realSenseFps)
 
-    # Create a pipeline
-    rs.createPipeline()
+    print('Hello RS')
+    # rs = sensorRealSense.rsCamera(realSenseResolution, realSenseFps)
 
-    # Start the pipeline
-    rs.startPipeline()
+    # # Create a pipeline
+    # rs.createPipeline()
 
-    try:
-        while True:
-            event, values = window.read(timeout=10)
+    # # Start the pipeline
+    # rs.startPipeline()
 
-            # Wait for the next frames from the camera
-            frames = rs.grabFrames()
+    # try:
+    #     while True:
+    #         event, values = window.read(timeout=10)
 
-            # Get the color frame
-            colorFrame = rs.getColorFrame(frames)
+    #         # Wait for the next frames from the camera
+    #         frames = rs.grabFrames()
 
-            # Get the values from the GUI
-            params = {'allChannels': values['AChannels'], 'rChannel': values['RChannel'],
-                      'gChannel': values['GChannel'], 'bChannel': values['BChannel'],
-                      'isMarkerLeftHanded': values['MarkerLeftHanded'], 'windowWidth': windowWidth
-                      }
+    #         # Get the color frame
+    #         colorFrame = rs.getColorFrame(frames)
 
-            # Change brightness
-            colorFrame = cv.convertScaleAbs(
-                colorFrame, alpha=values['camAlpha'], beta=values['camBeta'])
+    #         # Get the values from the GUI
+    #         params = {'allChannels': values['AChannels'], 'rChannel': values['RChannel'],
+    #                   'gChannel': values['GChannel'], 'bChannel': values['BChannel'],
+    #                   'isMarkerLeftHanded': values['MarkerLeftHanded'], 'windowWidth': windowWidth
+    #                   }
 
-            procFrame = channelSeparator(colorFrame, params)
+    #         # Change brightness
+    #         colorFrame = cv.convertScaleAbs(
+    #             colorFrame, alpha=values['camAlpha'], beta=values['camBeta'])
 
-            # Show the frames
-            frame = cv.imencode(".png", procFrame)[1].tobytes()
+    #         procFrame = channelSeparator(colorFrame, params)
 
-    finally:
-        # Stop the pipeline and close the windows
-        rs.stopPipeline()
-        cv.destroyAllWindows()
+    #         # Show the frames
+    #         frame = cv.imencode(".png", procFrame)[1].tobytes()
+
+    # finally:
+    #     # Stop the pipeline and close the windows
+    #     rs.stopPipeline()
+    #     cv.destroyAllWindows()
 
 
 # Run the program
