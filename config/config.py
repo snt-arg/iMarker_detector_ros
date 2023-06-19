@@ -1,28 +1,8 @@
 import os
 import numpy as np
 
-# GUI elements
-windowWidth = 1800              # Shown window width
-
 # Sensors
 sensorProjectRoot = f"{os.getcwd()}/src/csr_sensors/sensors/config"
-
-# Pre-processing
-# Dimensions of ROI for iDS camera setup
-roiDimension = {
-    'cap1': {
-        'x': 520,
-        'y': 200,
-        'width': 976,
-        'height': 1094
-    },
-    'cap2': {
-        'x': 480,
-        'y': 212,
-        'width': 976,
-        'height': 1094
-    },
-}
 
 # Processing
 # Homography matrix for iDS cameras
@@ -46,4 +26,3 @@ homographyMatList = {
                            [2.28028148e-02,  9.99854316e-01, -9.24323584e+00],
                            [1.20355482e-05, -1.35088334e-05,  1.00000000e+00]])
 }
-homographyMat = homographyMatList['Settings2']

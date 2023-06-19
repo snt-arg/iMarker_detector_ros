@@ -1,7 +1,17 @@
-# Configuration file for Double iDS camera setup
+gui: {
+  windowWidth: 1800,
+  windowLocation: {
+    x: 800,
+    y: 400,
+  },
+}
 
 sensor: {
   exposureTime: 20000,
+  usbCamPorts: {
+    lCam: '/dev/video2',
+    rCam: '/dev/video4',
+  },
   brightness: {
     alpha: 1.0,
     beta: 0.0,
@@ -18,7 +28,23 @@ markers: {
 }
 
 preProcessing: {
+  fpsBoost: true,
   channel: 'g',
+  roiDimension: {
+    cap1: {
+        x: 520,
+        y: 200,
+        width: 976,
+        height: 1094
+    },
+    cap2: {
+        x: 480,
+        y: 212,
+        width: 976,
+        height: 1094
+    },
+  },
+  homographyMat: 'Settings2'
 }
 
 processing: {
@@ -31,11 +57,8 @@ processing: {
 }
 
 postProcessing: {
-  
+  threshold: 30,
+  erodeKernelSize: 3,
+  gaussianBlurKernelSize: 3,
+  thresholdMethod: 'binary',
 }
-
-<!-- Default values for Processing -->
-<arg name="erodeKernelSize" default="3" />          <!-- Erosion kernel (between 1 and 50) -->
-<arg name="gaussianBlurKernelSize" default="3" />   <!-- Gaussian blur kernel (only odd values) -->
-<arg name="thresholdMethod" default="binary" />     <!-- Thresholding method (options: both, binary, otsu) -->
-<arg name="threshold" default="30" />               <!-- Threshold for separating layers (between 0 and 255) -->
