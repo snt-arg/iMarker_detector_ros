@@ -1,9 +1,6 @@
 configs:
   gui:
     windowWidth: 1800
-    windowLocation:
-      x: 800
-      y: 400
   sensor:
     brightness:
       alpha: 1.0
