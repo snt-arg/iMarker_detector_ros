@@ -2,23 +2,65 @@
 
 import rospy
 import cv2 as cv
+import numpy as np
 from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 import src.csr_sensors.sensors.sensorUSB as usb
 from src.csr_detector.process import processFrames
-# from config import ports, fpsBoost, flipImage, preAligment, homographyMat, windowWidth
+from utils.valueParser import thresholdParser, channelParser
 
 
 def main():
     # Initializing a ROS node
     rospy.init_node('csr_detector_usbCam')
+    rate = rospy.Rate(10)  # Publishing rate in Hz
+    publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
+    publisherCamL = rospy.Publisher('left_camera', Image, queue_size=10)
+    publisherCamR = rospy.Publisher('right_camera', Image, queue_size=10)
+    publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
+
+    # ROS Bridge
+    bridge = CvBridge()
 
     # Loading configuration values
     try:
         configs = rospy.get_param("~config")
+        homography = rospy.get_param("~homographyList")
     except:
         rospy.logerr("No Config file found!")
 
-    print()
+    # Prepare the basic parameters
+    try:
+        isThreshOts, isThreshBoth, isThreshBin = thresholdParser(
+            configs['postProcessing']['thresholdMethod'])
+        isRChannel, isGChannel, isBChannel, isAllChannels = channelParser(
+            configs['preProcessing']['channel'])
+        homographyMat = np.array(homography[configs['preProcessing']
+                                            ['homographyMat']])
+        # Prepare parameters based on what processor needs
+        params = {
+            'rChannel': isRChannel,
+            'gChannel': isGChannel,
+            'bChannel': isBChannel,
+            'threshbin': isThreshBin,
+            'threshots': isThreshOts,
+            'threshboth': isThreshBoth,
+            'allChannels': isAllChannels,
+            'homographyMat': homographyMat,
+            'windowWidth': configs['gui']['windowWidth'],
+            'maxFeatures': configs['processing']['maxFeatures'],
+            'threshold': configs['postProcessing']['threshold'],
+            'preAligment': configs['processing']['preAligment'],
+            'isMarkerLeftHanded': configs['markers']['leftHanded'],
+            'erosionKernel': configs['postProcessing']['erodeKernelSize'],
+            'enableCircularMask': configs['processing']['enableCircularROI'],
+            'goodMatchPercentage': configs['processing']['goodMatchPercentage'],
+            'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
+            'circlularMaskCoverage': configs['processing']['circlularMaskCoverage'],
+        }
+    except:
+        rospy.logerr("Error in fetching parameters!")
+
     # Camera
     capL = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
     capR = usb.createCameraObject(configs['sensor']['usbCamPorts']['rCam'])
@@ -27,38 +69,39 @@ def main():
         capL.set(cv.CAP_PROP_FPS, 30.0)
         capR.set(cv.CAP_PROP_FPS, 30.0)
 
-    while True:
+    while not rospy.is_shutdown():
         # Retrieve frames
         # Note: if each of the cameras not working, retX will be False
         retL, frameL = usb.grabImage(capL)
         retR, frameR = usb.grabImage(capR)
 
-    #     # Get the values from the GUI
-    #     params = {'maxFeatures': values['MaxFeat'], 'goodMatchPercentage': values['MatchRate'],
-    #               'circlularMaskCoverage': values['CircMask'], 'threshold': values['Threshold'],
-    #               'erosionKernel': values['Erosion'], 'gaussianKernel': values['Gaussian'],
-    #               'enableCircularMask': values['CircMaskEnable'], 'allChannels': values['AChannels'],
-    #               'rChannel': values['RChannel'], 'gChannel': values['GChannel'], 'bChannel': values['BChannel'],
-    #               'threshboth': values['ThreshBoth'], 'threshbin': values['ThreshBin'],
-    #               'threshots': values['ThreshOts'], 'isMarkerLeftHanded': values['MarkerLeftHanded'],
-    #               'preAligment': preAligment, 'homographyMat': homographyMat, 'windowWidth': windowWidth
-    #               }
+        # Change brightness
+        frameL = cv.convertScaleAbs(
+            frameL, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
+        frameR = cv.convertScaleAbs(
+            frameR, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
 
-    #     # Change brightness
-    #     frameL = cv.convertScaleAbs(
-    #         frameL, alpha=values['camAlpha'], beta=values['camBeta'])
-    #     frameR = cv.convertScaleAbs(
-    #         frameR, alpha=values['camAlpha'], beta=values['camBeta'])
+        # Flip the right frame
+        if (configs['processing']['flipImage']):
+            frameR = cv.flip(frameR, 1)
 
-    #     # Flip the right frame
-    #     if (flipImage):
-    #         frameR = cv.flip(frameR, 1)
+        # Convert to ROS
+        frameLRos = bridge.cv2_to_imgmsg(frameL, "bgr8")
+        frameRRos = bridge.cv2_to_imgmsg(frameR, "bgr8")
+        publisherCamL.publish(frameLRos)
+        publisherCamR.publish(frameRRos)
 
-    #     # Process frames
-    #     frame, mask = processFrames(frameL, frameR, retL, retR, params)
+        # Process frames
+        frame, mask = processFrames(frameL, frameR, retL, retR, params)
 
-    #     # Show the frames
-    #     frame = cv.imencode(".png", frame)[1].tobytes()
+        # Convert to ROS
+        maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
+        resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
+        publisherMask.publish(maskRos)
+        publisherResult.publish(resultRos)
+
+        # Continue publishing
+        rate.sleep()
 
     capL.release()
     capR.release()
