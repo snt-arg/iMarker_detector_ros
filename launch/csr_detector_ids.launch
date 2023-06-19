@@ -5,7 +5,7 @@
 
     <!-- Main Node -->
     <node name="csr_detector" pkg="csr_detector_ros" type="main_ids.py" output="screen">
-        <rosparam command="load" file="$(find csr_detector_ros)/config/config.yaml" />
+        <rosparam command="load" file="$(find csr_detector_ros)/config/config_ids.yaml" />
     </node>
 
 </launch>

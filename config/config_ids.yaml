@@ -1,0 +1,40 @@
+configs:
+  gui:
+    windowWidth: 1800
+    windowLocation:
+      x: 800
+      y: 400
+  sensor:
+    exposureTime: 20000
+    brightness:
+      alpha: 1.0
+      beta: 0.0
+  markers:
+    leftHanded: true
+  preProcessing:
+    fpsBoost: true
+    channel: 'g'
+    roiDimension:
+      cap1:
+        x: 520
+        y: 200
+        width: 976
+        height: 1094
+      cap2:
+        x: 480
+        y: 212
+        width: 976
+        height: 1094
+    homographyMat: 'Settings2'
+  processing:
+    flipImage: true
+    maxFeatures: 500
+    preAligment: true
+    goodMatchPercentage: 0.4
+    enableCircularROI: false
+    circlularMaskCoverage: 0.8
+  postProcessing:
+    threshold: 30
+    erodeKernelSize: 3
+    gaussianBlurKernelSize: 3
+    thresholdMethod: 'binary'

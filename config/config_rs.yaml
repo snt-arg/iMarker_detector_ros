@@ -1,0 +1,23 @@
+configs:
+  gui:
+    windowWidth: 1800
+    windowLocation:
+      x: 800
+      y: 400
+  sensor:
+    brightness:
+      alpha: 1.0
+      beta: 0.0
+    realSenseFps: 30
+    realSenseResolution:
+      width: 640
+      height: 480
+  markers:
+    leftHanded: true
+  preProcessing:
+    channel: 'g'
+  postProcessing:
+    threshold: 30
+    erodeKernelSize: 3
+    gaussianBlurKernelSize: 3
+    thresholdMethod: 'binary'

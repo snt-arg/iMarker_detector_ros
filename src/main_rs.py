@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import rospy
 import cv2 as cv
 import numpy as np
 from src.csr_sensors.sensors import sensorRealSense
@@ -8,8 +9,17 @@ from config import realSenseResolution, realSenseFps, windowWidth
 
 
 def main():
+    # Initializing a ROS node
+    rospy.init_node('csr_detector_rsCam')
 
-    print('Hello RS')
+    # Loading configuration values
+    try:
+        configs = rospy.get_param("~config")
+    except:
+        rospy.logerr("No Config file found!")
+
+    print(configs)
+
     # rs = sensorRealSense.rsCamera(realSenseResolution, realSenseFps)
 
     # # Create a pipeline

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import rospy
 import cv2 as cv
 import numpy as np
 from src.csr_sensors.sensors import sensorIDS
@@ -9,8 +10,16 @@ from config import preAligment, homographyMat, windowWidth, sensorProjectRoot
 
 
 def main():
+    # Initializing a ROS node
+    rospy.init_node('csr_detector_idsCam')
 
-    print('Hello IDS')
+    # Loading configuration values
+    try:
+        configs = rospy.get_param("~config")
+    except:
+        rospy.logerr("No Config file found!")
+
+    print(configs)
 
     # cap1 = sensorIDS.idsCamera(0)
     # cap2 = sensorIDS.idsCamera(1)

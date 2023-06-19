@@ -1,29 +1,37 @@
 #!/usr/bin/env python3
 
+import rospy
 import cv2 as cv
+from cv_bridge import CvBridge
 import src.csr_sensors.sensors.sensorUSB as usb
 from src.csr_detector.process import processFrames
-from config import ports, fpsBoost, flipImage, preAligment, homographyMat, windowWidth
+# from config import ports, fpsBoost, flipImage, preAligment, homographyMat, windowWidth
 
 
 def main():
-    print('Hello USB')
+    # Initializing a ROS node
+    rospy.init_node('csr_detector_usbCam')
 
+    # Loading configuration values
+    try:
+        configs = rospy.get_param("~config")
+    except:
+        rospy.logerr("No Config file found!")
+
+    print()
     # Camera
-    # capL = usb.createCameraObject(ports['lCam'])
-    # capR = usb.createCameraObject(ports['rCam'])
+    capL = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
+    capR = usb.createCameraObject(configs['sensor']['usbCamPorts']['rCam'])
 
-    # if fpsBoost:
-    #     capL.set(cv.CAP_PROP_FPS, 30.0)
-    #     capR.set(cv.CAP_PROP_FPS, 30.0)
+    if configs['preProcessing']['fpsBoost']:
+        capL.set(cv.CAP_PROP_FPS, 30.0)
+        capR.set(cv.CAP_PROP_FPS, 30.0)
 
-    # while True:
-    #     event, values = window.read(timeout=10)
-
-    #     # Retrieve frames
-    #     # Note: if each of the cameras not working, retX will be False
-    #     retL, frameL = usb.grabImage(capL)
-    #     retR, frameR = usb.grabImage(capR)
+    while True:
+        # Retrieve frames
+        # Note: if each of the cameras not working, retX will be False
+        retL, frameL = usb.grabImage(capL)
+        retR, frameR = usb.grabImage(capR)
 
     #     # Get the values from the GUI
     #     params = {'maxFeatures': values['MaxFeat'], 'goodMatchPercentage': values['MatchRate'],
@@ -52,8 +60,8 @@ def main():
     #     # Show the frames
     #     frame = cv.imencode(".png", frame)[1].tobytes()
 
-    # capL.release()
-    # capR.release()
+    capL.release()
+    capR.release()
 
 
 # Run the program
