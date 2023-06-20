@@ -24,10 +24,11 @@ def main():
 
     # Loading configuration values
     try:
-        configs = rospy.get_param("~config")
+        configs = rospy.get_param("~configs")
         homography = rospy.get_param("~homographyList")
     except:
-        rospy.logerr("No Config file found!")
+        rospy.logerr("No Config file found! Exiting ...")
+        exit()
 
     # Prepare the basic parameters
     try:
@@ -59,7 +60,8 @@ def main():
             'circlularMaskCoverage': configs['processing']['circlularMaskCoverage'],
         }
     except:
-        rospy.logerr("Error in fetching parameters!")
+        rospy.logerr("Error in fetching parameters! Exiting ...")
+        exit()
 
     # Camera
     capL = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
@@ -74,6 +76,11 @@ def main():
         # Note: if each of the cameras not working, retX will be False
         retL, frameL = usb.grabImage(capL)
         retR, frameR = usb.grabImage(capR)
+
+        # Check if both cameras are connected
+        if (not (retL and retR)):
+            rospy.logerr("No connected devices found! Exiting ...")
+            exit()
 
         # Change brightness
         frameL = cv.convertScaleAbs(

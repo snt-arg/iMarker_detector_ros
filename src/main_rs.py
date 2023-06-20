@@ -2,13 +2,11 @@
 
 import rospy
 import cv2 as cv
-import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from src.csr_sensors.sensors import sensorRealSense
 from utils.valueParser import thresholdParser, channelParser
 from src.csr_detector.vision.channelSeparator import channelSeparator
-from config import realSenseResolution, realSenseFps, windowWidth
 
 
 def main():
@@ -24,9 +22,10 @@ def main():
 
     # Loading configuration values
     try:
-        configs = rospy.get_param("~config")
+        configs = rospy.get_param("~configs")
     except:
-        rospy.logerr("No Config file found!")
+        rospy.logerr("No Config file found! Exiting ...")
+        exit()
 
     # Prepare the basic parameters
     try:
@@ -47,10 +46,14 @@ def main():
             'isMarkerLeftHanded': configs['markers']['leftHanded'],
         }
     except:
-        rospy.logerr("Error in fetching parameters!")
+        rospy.logerr("Error in fetching parameters! Exiting ...")
+        exit()
 
     # Camera
-    rs = sensorRealSense.rsCamera(realSenseResolution, realSenseFps)
+    realSenseResolution = (configs['sensor']['realSenseResolution']['width'],
+                           configs['sensor']['realSenseResolution']['height'])
+    rs = sensorRealSense.rsCamera(
+        realSenseResolution, configs['sensor']['realSenseFps'])
 
     # Create a pipeline
     rs.createPipeline()
@@ -69,15 +72,13 @@ def main():
 
             # Change brightness
             colorFrame = cv.convertScaleAbs(
-                colorFrame, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
+                colorFrame, alpha=configs['sensor']['brightness']['alpha'],
+                beta=configs['sensor']['brightness']['beta'])
 
             procFrame = channelSeparator(colorFrame, params)
 
             # Show the frames
             frame = cv.imencode(".png", procFrame)[1].tobytes()
-
-            # Continue publishing
-            rate.sleep()
 
             # Convert to ROS
             frameRos = bridge.cv2_to_imgmsg(procFrame, "bgr8")
@@ -85,8 +86,12 @@ def main():
             publisherResult.publish(frameRos)
             publisherCam.publish(colorFrameRos)
 
+            # Continue publishing
+            rate.sleep()
+
     finally:
         # Stop the pipeline and close the windows
+        rospy.logerr("Error in RealSense pipeline! Exiting ...")
         rs.stopPipeline()
 
 

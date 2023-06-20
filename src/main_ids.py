@@ -15,7 +15,8 @@ def main():
 
     # Loading configuration values
     try:
-        configs = rospy.get_param("~config")
+        configs = rospy.get_param("~configs")
+        homography = rospy.get_param("~homographyList")
     except:
         rospy.logerr("No Config file found!")
 
