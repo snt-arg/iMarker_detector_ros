@@ -13,7 +13,7 @@ def main():
     # Initializing a ROS node
     rospy.init_node('csr_detector_rsCam')
     rate = rospy.Rate(10)  # Publishing rate in Hz
-    publisherCam = rospy.Publisher('camera', Image, queue_size=10)
+    publisherCam = rospy.Publisher('main_camera', Image, queue_size=10)
     publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
     publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
 

@@ -30,7 +30,25 @@ The next step is to intall the cloned submodules and define dependencies and oth
 
 Finally, when everything has been installed, you can run `catkin build` to build the files.
 
-<!-- rosrun csr_detector_ros main_usb.py -->
+## 🚀 Running the Code
+
+When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the nodes listed below:
+
+| Launcher | Description |
+| ------------ | ------------ |
+| `csr_detector_usb.launch` | Runs the USB cameras version of the code |
+| `csr_detector_ids.launch` | Runs the iDS cameras version of the code |
+| `csr_detector_rs.launch` | Runs the RealSense camera version of the code |
+
+There are also some arguments that you can configure based on your scenario:
+
+- `show_rviz`: Runs an Rviz node when running the main node (default: true)
+
+For instance, the below command runs the RealSense version of CSR detector while not running Rviz:
+
+```
+roslaunch csr_detector_ros csr_detector_rs.launch show_rviz:=false
+```
 
 ## 🤖 ROS Topics and Params
 
@@ -38,16 +56,20 @@ Finally, when everything has been installed, you can run `catkin build` to build
 
 | Topic | Description |
 | ------------ | ------------ |
-| `/sample` | sample |
+| `-` | N/A |
 
 ### Published topics
 
 | Topic | Description |
 | ------------ | ------------ |
-| `/sample` | sample |
+| `/left_camera` | Publishes the left camera of a two-camera setup |
+| `/right_camera` | Publishes the right camera of a two-camera setup |
+| `/main_camera` | Publishes the main camera of a mono-camera setup |
+| `/result_frame` | Publishes the resulting frame after processing |
+| `/result_mask` | Publishes the resulting frame mask after processing |
 
 ### Params
 
 | Param | Description |
 | ------------ | ------------ |
-| `/sample` | sample |
+| `-` | N/A |
