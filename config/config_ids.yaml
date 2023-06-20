@@ -7,7 +7,7 @@ configs:
       alpha: 5.0
       beta: 0.0
   markers:
-    leftHanded: true
+    leftHanded: false
   preProcessing:
     fpsBoost: true
     channel: 'g'
@@ -32,7 +32,7 @@ configs:
     enableCircularROI: false
     circlularMaskCoverage: 0.8
   postProcessing:
-    threshold: 30
-    erodeKernelSize: 3
+    threshold: 35
+    erodeKernelSize: 5
     gaussianBlurKernelSize: 3
     thresholdMethod: 'binary'
