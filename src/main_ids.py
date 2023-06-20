@@ -1,86 +1,144 @@
 #!/usr/bin/env python3
 
+import os
 import rospy
+import rospkg
 import cv2 as cv
 import numpy as np
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 from src.csr_sensors.sensors import sensorIDS
 from src.csr_detector.process import processFrames
-from config import roiDimension, exposureTime
-from config import preAligment, homographyMat, windowWidth, sensorProjectRoot
+from utils.valueParser import thresholdParser, channelParser
 
 
 def main():
     # Initializing a ROS node
     rospy.init_node('csr_detector_idsCam')
+    rate = rospy.Rate(10)  # Publishing rate in Hz
+    publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
+    publisherCamL = rospy.Publisher('left_camera', Image, queue_size=10)
+    publisherCamR = rospy.Publisher('right_camera', Image, queue_size=10)
+    publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
+
+    # ROS Bridge
+    bridge = CvBridge()
 
     # Loading configuration values
     try:
         configs = rospy.get_param("~configs")
         homography = rospy.get_param("~homographyList")
     except:
-        rospy.logerr("No Config file found!")
+        rospy.logerr("No Config file found! Exiting ...")
+        exit()
 
-    print(configs)
+    # Prepare the basic parameters
+    try:
+        isThreshOts, isThreshBoth, isThreshBin = thresholdParser(
+            configs['postProcessing']['thresholdMethod'])
+        isRChannel, isGChannel, isBChannel, isAllChannels = channelParser(
+            configs['preProcessing']['channel'])
+        homographyMat = np.array(homography[configs['preProcessing']
+                                            ['homographyMat']])
+        # Prepare parameters based on what processor needs
+        params = {
+            'rChannel': isRChannel,
+            'gChannel': isGChannel,
+            'bChannel': isBChannel,
+            'threshbin': isThreshBin,
+            'threshots': isThreshOts,
+            'threshboth': isThreshBoth,
+            'allChannels': isAllChannels,
+            'homographyMat': homographyMat,
+            'windowWidth': configs['gui']['windowWidth'],
+            'maxFeatures': configs['processing']['maxFeatures'],
+            'threshold': configs['postProcessing']['threshold'],
+            'preAligment': configs['processing']['preAligment'],
+            'isMarkerLeftHanded': configs['markers']['leftHanded'],
+            'erosionKernel': configs['postProcessing']['erodeKernelSize'],
+            'enableCircularMask': configs['processing']['enableCircularROI'],
+            'goodMatchPercentage': configs['processing']['goodMatchPercentage'],
+            'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
+            'circlularMaskCoverage': configs['processing']['circlularMaskCoverage'],
+        }
+    except:
+        rospy.logerr("Error in fetching parameters! Exiting ...")
+        exit()
 
-    # cap1 = sensorIDS.idsCamera(0)
-    # cap2 = sensorIDS.idsCamera(1)
+    # Camera
+    cap1 = sensorIDS.idsCamera(0)
+    cap2 = sensorIDS.idsCamera(1)
 
-    # cap1.getCalibrationConfig(sensorProjectRoot, 'cam1')
-    # cap2.getCalibrationConfig(sensorProjectRoot, 'cam2')
+    # Calibration
+    # The path to the current Python file
+    currentFilePath = os.path.abspath(__file__)
+    calibrationFilePath = os.path.join(os.path.dirname(
+        currentFilePath), configs['preProcessing']['sensorProjectConfigPath'])
+    cap1.getCalibrationConfig(calibrationFilePath, 'cam1')
+    cap2.getCalibrationConfig(calibrationFilePath, 'cam2')
 
-    # cap1.setROI(roiDimension['cap1']['x'], roiDimension['cap1']
-    #             ['y'], roiDimension['cap1']['width'], roiDimension['cap1']['height'])
-    # cap2.setROI(roiDimension['cap2']['x'], roiDimension['cap2']
-    #             ['y'], roiDimension['cap2']['width'], roiDimension['cap2']['height'])
+    # Set ROI
+    roiDimension = configs['preProcessing']['roiDimension']
+    cap1.setROI(roiDimension['cap1']['x'], roiDimension['cap1']
+                ['y'], roiDimension['cap1']['width'], roiDimension['cap1']['height'])
+    cap2.setROI(roiDimension['cap2']['x'], roiDimension['cap2']
+                ['y'], roiDimension['cap2']['width'], roiDimension['cap2']['height'])
 
-    # cap1.syncAsMaster()
-    # cap2.syncAsSlave()
+    # Synchronization
+    cap1.syncAsMaster()
+    cap2.syncAsSlave()
 
-    # cap1.startAquisition()
-    # cap2.startAquisition()
+    # Capturing
+    cap1.startAquisition()
+    cap2.startAquisition()
 
-    # cap1.setExposureTime(exposureTime)
-    # cap2.setExposureTime(exposureTime)
+    # Exposure
+    cap1.setExposureTime(configs['sensor']['exposureTime'])
+    cap2.setExposureTime(configs['sensor']['exposureTime'])
 
-    # while True:
+    while not rospy.is_shutdown():
 
-    #     frame1 = cap1.getFrame()
-    #     frame2 = cap2.getFrame()
+        # Frames acquisition
+        frame1 = cap1.getFrame()
+        frame2 = cap2.getFrame()
 
-    #     retL = False if (not np.any(frame1)) else True
-    #     retR = False if (not np.any(frame2)) else True
+        retL = False if (not np.any(frame1)) else True
+        retR = False if (not np.any(frame2)) else True
 
-    #     # Get the values from the GUI
-    #     params = {'maxFeatures': values['MaxFeat'], 'goodMatchPercentage': values['MatchRate'],
-    #               'circlularMaskCoverage': values['CircMask'], 'threshold': values['Threshold'],
-    #               'erosionKernel': values['Erosion'], 'gaussianKernel': values['Gaussian'],
-    #               'enableCircularMask': values['CircMaskEnable'], 'allChannels': values['AChannels'],
-    #               'rChannel': values['RChannel'], 'gChannel': values['GChannel'], 'bChannel': values['BChannel'],
-    #               'threshboth': values['ThreshBoth'], 'threshbin': values['ThreshBin'], 'threshots': values['ThreshOts'],
-    #               'isMarkerLeftHanded': values['MarkerLeftHanded'],
-    #               'preAligment': preAligment, 'homographyMat': homographyMat, 'windowWidth': windowWidth
-    #               }
+        # Check if both cameras are connected
+        if (not (retL and retR)):
+            rospy.logerr("No connected devices found! Exiting ...")
+            exit()
 
-    #     frameL = cv.convertScaleAbs(
-    #         frame1, alpha=values['camAlpha'], beta=values['camBeta'])
-    #     frameR = cv.convertScaleAbs(
-    #         frame2, alpha=values['camAlpha'], beta=values['camBeta'])
+        # Change brightness
+        frameL = cv.convertScaleAbs(
+            frame1, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
+        frameR = cv.convertScaleAbs(
+            frame2, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
 
-    #     frameR = cv.flip(frameR, 1)
+        # Flip the right frame
+        frameR = cv.flip(frameR, 1)
 
-    #     # Process frames
-    #     frame, mask = processFrames(frameL, frameR, retL, retR,
-    #                                 params)
+        # Convert to ROS
+        frameLRos = bridge.cv2_to_imgmsg(frameL, "bgr8")
+        frameRRos = bridge.cv2_to_imgmsg(frameR, "bgr8")
+        publisherCamL.publish(frameLRos)
+        publisherCamR.publish(frameRRos)
 
-    #     # Add text to the image
-    #     # addLabel(frame, 5)
+        # Process frames
+        frame, mask = processFrames(frameL, frameR, retL, retR, params)
 
-    #     # Show the frames
-    #     frame = cv.imencode(".png", frame)[1].tobytes()
+        # Convert to ROS
+        maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
+        resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
+        publisherMask.publish(maskRos)
+        publisherResult.publish(resultRos)
 
-    # window.close()
-    # cap1.closeLibrary()
-    # cap2.closeLibrary()
+        # Continue publishing
+        rate.sleep()
+
+    cap1.closeLibrary()
+    cap2.closeLibrary()
 
 
 # Run the program

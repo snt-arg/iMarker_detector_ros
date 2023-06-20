@@ -4,7 +4,7 @@ configs:
   sensor:
     exposureTime: 20000
     brightness:
-      alpha: 1.0
+      alpha: 5.0
       beta: 0.0
   markers:
     leftHanded: true
@@ -23,6 +23,7 @@ configs:
         width: 976
         height: 1094
     homographyMat: 'Settings2'
+    sensorProjectConfigPath: 'csr_sensors/sensors/config'
   processing:
     flipImage: true
     maxFeatures: 500

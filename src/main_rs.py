@@ -77,9 +77,6 @@ def main():
 
             procFrame = channelSeparator(colorFrame, params)
 
-            # Show the frames
-            frame = cv.imencode(".png", procFrame)[1].tobytes()
-
             # Convert to ROS
             frameRos = bridge.cv2_to_imgmsg(procFrame, "bgr8")
             colorFrameRos = bridge.cv2_to_imgmsg(colorFrame, "bgr8")
