@@ -1,7 +1,9 @@
 <launch>
+    <!-- Control arguments -->
+    <arg name="show_rviz" default="true" />
     
     <!-- Visualization -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
+    <node if="$(arg show_rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
 
     <!-- Main Node -->
     <node name="csr_detector" pkg="csr_detector_ros" type="main_usb.py" output="screen">
