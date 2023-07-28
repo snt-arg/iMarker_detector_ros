@@ -1,0 +1,13 @@
+<launch>
+    <!-- Control arguments -->
+    <arg name="show_rviz" default="true" />
+
+    <!-- Visualization -->
+    <node if="$(arg show_rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/mono_camera.rviz" output="screen" />
+
+    <!-- Main Node -->
+    <node name="csr_detector" pkg="csr_detector_ros" type="main_usbMono.py" output="screen">
+        <rosparam command="load" file="$(find csr_detector_ros)/config/config_usb.yaml" />
+    </node>
+
+</launch>

@@ -3,17 +3,17 @@ configs:
     windowWidth: 1800
   sensor:
     usbCamPorts:
-      lCam: '/dev/video2'
-      rCam: '/dev/video4'
+      lCam: "/dev/video2"
+      rCam: "/dev/video4"
     brightness:
-      alpha: 1.0
+      alpha: 2.0
       beta: 0.0
   markers:
     leftHanded: true
   preProcessing:
     fpsBoost: true
-    channel: 'g'
-    homographyMat: 'Settings2'
+    channel: "g"
+    homographyMat: "Settings2"
   processing:
     flipImage: true
     maxFeatures: 500
@@ -22,7 +22,7 @@ configs:
     enableCircularROI: true
     circlularMaskCoverage: 0.8
   postProcessing:
-    threshold: 30
+    threshold: 10
     erodeKernelSize: 3
     gaussianBlurKernelSize: 3
-    thresholdMethod: 'binary'
+    thresholdMethod: "binary"
