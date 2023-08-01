@@ -12,9 +12,11 @@ configs:
   markers:
     leftHanded: true
   preProcessing:
-    channel: 'g'
+    channel: "g"
+  processing:
+    enableCircularROI: false
   postProcessing:
-    threshold: 30
-    erodeKernelSize: 3
-    gaussianBlurKernelSize: 3
-    thresholdMethod: 'binary'
+    threshold: 70
+    erodeKernelSize: 1
+    gaussianBlurKernelSize: 1
+    thresholdMethod: "binary"

@@ -5,8 +5,8 @@ import cv2 as cv
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from src.csr_sensors.sensors import sensorRealSense
+from src.csr_detector.process import processMonoFrame
 from utils.valueParser import thresholdParser, channelParser
-from src.csr_detector.vision.channelSeparator import channelSeparator
 
 
 def main():
@@ -43,7 +43,11 @@ def main():
             'threshboth': isThreshBoth,
             'allChannels': isAllChannels,
             'windowWidth': configs['gui']['windowWidth'],
+            'threshold': configs['postProcessing']['threshold'],
             'isMarkerLeftHanded': configs['markers']['leftHanded'],
+            'erosionKernel': configs['postProcessing']['erodeKernelSize'],
+            'enableCircularMask': configs['processing']['enableCircularROI'],
+            'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
         }
     except:
         rospy.logerr("Error in fetching parameters! Exiting ...")
@@ -75,13 +79,18 @@ def main():
                 colorFrame, alpha=configs['sensor']['brightness']['alpha'],
                 beta=configs['sensor']['brightness']['beta'])
 
-            procFrame = channelSeparator(colorFrame, params)
+            # Convert to ROS
+            frameRos = bridge.cv2_to_imgmsg(colorFrame, "bgr8")
+            publisherCam.publish(frameRos)
+
+            # Process frames
+            frame, mask = processMonoFrame(colorFrame, True, params)
 
             # Convert to ROS
-            frameRos = bridge.cv2_to_imgmsg(procFrame, "bgr8")
-            colorFrameRos = bridge.cv2_to_imgmsg(colorFrame, "bgr8")
-            publisherResult.publish(frameRos)
-            publisherCam.publish(colorFrameRos)
+            maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
+            resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
+            publisherMask.publish(maskRos)
+            publisherResult.publish(resultRos)
 
             # Continue publishing
             rate.sleep()

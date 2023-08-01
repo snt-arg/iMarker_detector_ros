@@ -36,11 +36,12 @@ Finally, when everything has been installed, you can run `catkin build` to build
 
 When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the nodes listed below:
 
-| Launcher | Description |
-| ------------ | ------------ |
-| `csr_detector_usb.launch` | Runs the USB cameras version of the code |
-| `csr_detector_ids.launch` | Runs the iDS cameras version of the code |
-| `csr_detector_rs.launch` | Runs the RealSense camera version of the code |
+| Launcher                      | Description                                   |
+| ----------------------------- | --------------------------------------------- |
+| `csr_detector_usb.launch`     | Runs the USB cameras version of the code      |
+| `csr_detector_ids.launch`     | Runs the iDS cameras version of the code      |
+| `csr_detector_rs.launch`      | Runs the RealSense camera version of the code |
+| `csr_detector_usbMono.launch` | Runs the mono USB camera version of the code  |
 
 There are also some arguments that you can configure based on your scenario:
 
@@ -57,21 +58,21 @@ roslaunch csr_detector_ros csr_detector_rs.launch show_rviz:=false
 ### Subscribed topics
 
 | Topic | Description |
-| ------------ | ------------ |
-| `-` | N/A |
+| ----- | ----------- |
+| `-`   | N/A         |
 
 ### Published topics
 
-| Topic | Description |
-| ------------ | ------------ |
-| `/left_camera` | Publishes the left camera of a two-camera setup |
-| `/right_camera` | Publishes the right camera of a two-camera setup |
-| `/main_camera` | Publishes the main camera of a mono-camera setup |
-| `/result_frame` | Publishes the resulting frame after processing |
-| `/result_mask` | Publishes the resulting frame mask after processing |
+| Topic           | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `/left_camera`  | Publishes the left camera of a two-camera setup     |
+| `/right_camera` | Publishes the right camera of a two-camera setup    |
+| `/main_camera`  | Publishes the main camera of a mono-camera setup    |
+| `/result_frame` | Publishes the resulting frame after processing      |
+| `/result_mask`  | Publishes the resulting frame mask after processing |
 
 ### Params
 
 | Param | Description |
-| ------------ | ------------ |
-| `-` | N/A |
+| ----- | ----------- |
+| `-`   | N/A         |
