@@ -1,6 +1,6 @@
 # CSR Detector ROS (with Rviz)
 
-![Demo](docs/demo.png "Demo")
+![Demo](docs/demo.gif "Demo")
 
 This repository contains the ROS version of CSR-based object detector which provides a wrapper over [csr_sensors](https://github.com/snt-arg/csr_sensors) and [csr_detector](https://github.com/snt-arg/csr_detector) and provides an Rviz user interface for monitoring the results. Accordingly, the application is dependant to the repositories below:
 
