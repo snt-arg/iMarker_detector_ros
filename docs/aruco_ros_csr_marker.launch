@@ -1,0 +1,21 @@
+ <launch>
+
+    <arg name="side"             default="left"/>
+    <arg name="markerSize"      default="0.076"/> <!-- in meters -->
+    <!-- Leave below line empty and the pose will be published wrt param parent_name -->
+    <arg name="ref_frame"       default=""/>
+
+    <arg name="imageRaw"   default="/result_mask" />
+    <arg name="cameraInfo"   default="/rs_camera_params" />
+
+    <node pkg="aruco_ros" type="marker_publisher" name="aruco_csr_marker_publisher">
+        <remap from="/image" to="$(arg imageRaw)" />
+        <remap from="/camera_info" to="$(arg cameraInfo)" /> 
+        
+        <param name="image_is_rectified" value="True"/>
+        <param name="marker_size"        value="$(arg markerSize)"/>
+        <param name="reference_frame"    value="$(arg ref_frame)"/>
+        <param name="camera_frame"       value="$(arg side)_hand_camera"/>
+    </node>
+
+</launch>

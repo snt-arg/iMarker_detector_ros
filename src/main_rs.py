@@ -3,7 +3,7 @@
 import rospy
 import cv2 as cv
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from src.csr_sensors.sensors import sensorRealSense
 from src.csr_detector.process import processMonoFrame
 from utils.valueParser import thresholdParser, channelParser
@@ -16,6 +16,8 @@ def main():
     publisherCam = rospy.Publisher('main_camera', Image, queue_size=10)
     publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
     publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
+    publisherCamParam = rospy.Publisher(
+        'rs_camera_params', CameraInfo, queue_size=10)
 
     # ROS Bridge
     bridge = CvBridge()
@@ -72,7 +74,7 @@ def main():
             frames = rs.grabFrames()
 
             # Get the color frame
-            colorFrame = rs.getColorFrame(frames)
+            colorFrame, colorCamIntrinsics = rs.getColorFrame(frames)
 
             # Change brightness
             colorFrame = cv.convertScaleAbs(
@@ -86,11 +88,16 @@ def main():
             # Process frames
             frame, mask = processMonoFrame(colorFrame, True, params)
 
+            # Camera Params
+            # depthIntrinsics, colorIntrinsics = rs.getIntrinsicParams()
+            camInfoMsgs = getCameraInfo(colorCamIntrinsics)
+
             # Convert to ROS
             maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
             resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
             publisherMask.publish(maskRos)
             publisherResult.publish(resultRos)
+            publisherCamParam.publish(camInfoMsgs)
 
             # Continue publishing
             rate.sleep()
@@ -99,6 +106,22 @@ def main():
         # Stop the pipeline and close the windows
         rospy.logerr("Error in RealSense pipeline! Exiting ...")
         rs.stopPipeline()
+
+
+def getCameraInfo(intrinsics):
+    # Create a message and fill it with calibration params
+    camInfoMsgs = CameraInfo()
+    camInfoMsgs.header.frame_id = 'camera_link'
+    camInfoMsgs.width = intrinsics.width
+    camInfoMsgs.height = intrinsics.height
+    # Fill in the camera intrinsics (fx, fy, cx, cy)
+    camInfoMsgs.K = [intrinsics.fx, 0, intrinsics.ppx,
+                     0, intrinsics.fy, intrinsics.ppy,
+                     0, 0, 1]
+    # No distortion for RealSense cameras
+    camInfoMsgs.D = [0, 0, 0, 0, 0]
+    # Return it
+    return camInfoMsgs
 
 
 # Run the program

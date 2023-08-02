@@ -76,3 +76,12 @@ roslaunch csr_detector_ros csr_detector_rs.launch show_rviz:=false
 | Param | Description |
 | ----- | ----------- |
 | `-`   | N/A         |
+
+## 🔩 ArUco Marker Recognition
+
+In order to recognize markers, you need to run `aruco_ros` library [link](https://github.com/pal-robotics/aruco_ros) separately and feed it with `/result_mask` and `/rs_camera_params` topic. For doing this, you should follow below steps:
+
+- Create a separate `launch` file for `aruco_ros` library. It should remap `/result_mask` and `/rs_camera_params` of the repository with `/image` and `/camera_info` topics of `aruco_ros`, respectively. A sample can be found [here](docs/aruco_ros_csr_marker.launch).
+- Run the program using `roslaunch csr_detector_ros csr_detector_rs.launch`
+
+⚠️ The current version of the code works for Mono-camera RealSense library only. Other sensors will have this ability later.
