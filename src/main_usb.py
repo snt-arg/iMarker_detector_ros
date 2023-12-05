@@ -6,7 +6,7 @@ import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import src.csr_sensors.sensors.sensorUSB as usb
-from src.csr_detector.process import processFrames
+from src.csr_detector.process import processStereoFrames
 from utils.valueParser import thresholdParser, channelParser
 
 
@@ -99,7 +99,7 @@ def main():
         publisherCamR.publish(frameRRos)
 
         # Process frames
-        frame, mask = processFrames(frameL, frameR, retL, retR, params)
+        frame, mask = processStereoFrames(frameL, frameR, retL, retR, params)
 
         # Convert to ROS
         maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")

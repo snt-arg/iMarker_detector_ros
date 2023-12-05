@@ -2,10 +2,11 @@
 
 import rospy
 import cv2 as cv
+import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from src.csr_sensors.sensors import sensorRealSense
-from src.csr_detector.process import processMonoFrame
+from src.csr_detector.process import processSequentialFrames
 from utils.valueParser import thresholdParser, channelParser
 
 
@@ -18,6 +19,9 @@ def main():
     publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
     publisherCamParam = rospy.Publisher(
         'rs_camera_params', CameraInfo, queue_size=10)
+
+    # Previous frame
+    prevFrame = None
 
     # ROS Bridge
     bridge = CvBridge()
@@ -81,12 +85,16 @@ def main():
                 colorFrame, alpha=configs['sensor']['brightness']['alpha'],
                 beta=configs['sensor']['brightness']['beta'])
 
+            if prevFrame is None:
+                prevFrame = np.copy(colorFrame)
+
             # Convert to ROS
             frameRos = bridge.cv2_to_imgmsg(colorFrame, "bgr8")
             publisherCam.publish(frameRos)
 
             # Process frames
-            frame, mask = processMonoFrame(colorFrame, True, params)
+            frame, mask = processSequentialFrames(
+                prevFrame, colorFrame, True, params)
 
             # Camera Params
             # depthIntrinsics, colorIntrinsics = rs.getIntrinsicParams()
@@ -98,6 +106,9 @@ def main():
             publisherMask.publish(maskRos)
             publisherResult.publish(resultRos)
             publisherCamParam.publish(camInfoMsgs)
+
+            # Save the previous frame
+            prevFrame = np.copy(colorFrame)
 
             # Continue publishing
             rate.sleep()

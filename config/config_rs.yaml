@@ -16,7 +16,7 @@ configs:
   processing:
     enableCircularROI: false
   postProcessing:
-    threshold: 70
+    threshold: 50
     erodeKernelSize: 1
     gaussianBlurKernelSize: 1
     thresholdMethod: "binary"
