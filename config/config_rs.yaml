@@ -15,6 +15,7 @@ configs:
     channel: "g"
   processing:
     enableCircularROI: false
+    isSequentialSubtraction: false
   postProcessing:
     threshold: 50
     erodeKernelSize: 1

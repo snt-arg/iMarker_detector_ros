@@ -6,8 +6,8 @@ import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 from src.csr_sensors.sensors import sensorRealSense
-from src.csr_detector.process import processSequentialFrames
 from utils.valueParser import thresholdParser, channelParser
+from src.csr_detector.process import processSequentialFrames, processSingleFrame
 
 
 def main():
@@ -93,8 +93,11 @@ def main():
             publisherCam.publish(frameRos)
 
             # Process frames
-            frame, mask = processSequentialFrames(
-                prevFrame, colorFrame, True, params)
+            if (configs['processing']['isSequentialSubtraction']):
+                frame, mask = processSequentialFrames(
+                    prevFrame, colorFrame, True, params)
+            else:
+                frame, mask = processSingleFrame(colorFrame, True, params)
 
             # Camera Params
             # depthIntrinsics, colorIntrinsics = rs.getIntrinsicParams()
