@@ -10,7 +10,7 @@ configs:
     leftHanded: false
   preProcessing:
     fpsBoost: true
-    channel: 'g'
+    channel: "g"
     roiDimension:
       cap1:
         x: 520
@@ -22,17 +22,19 @@ configs:
         y: 212
         width: 976
         height: 1094
-    homographyMat: 'Settings2'
-    sensorProjectConfigPath: 'csr_sensors/sensors/config'
+    homographyMat: "Settings2"
+    sensorProjectConfigPath: "csr_sensors/sensors/config"
   processing:
     flipImage: true
     maxFeatures: 500
     preAligment: true
+    invertBinaryImage: true
     goodMatchPercentage: 0.4
     enableCircularROI: false
     circlularMaskCoverage: 0.8
+    isSequentialSubtraction: true
   postProcessing:
     threshold: 35
     erodeKernelSize: 5
     gaussianBlurKernelSize: 3
-    thresholdMethod: 'binary'
+    thresholdMethod: "binary"

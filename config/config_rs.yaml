@@ -14,6 +14,7 @@ configs:
   preProcessing:
     channel: "g"
   processing:
+    invertBinaryImage: true
     enableCircularROI: false
     isSequentialSubtraction: false
   postProcessing:

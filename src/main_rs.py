@@ -52,12 +52,17 @@ def main():
             'threshold': configs['postProcessing']['threshold'],
             'isMarkerLeftHanded': configs['markers']['leftHanded'],
             'erosionKernel': configs['postProcessing']['erodeKernelSize'],
+            'invertBinaryImage': configs['processing']['invertBinaryImage'],
             'enableCircularMask': configs['processing']['enableCircularROI'],
             'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
         }
     except:
         rospy.logerr("Error in fetching parameters! Exiting ...")
         exit()
+
+    monoSetupVariant = "Sequential Subtraction" if configs[
+        'processing']['isSequentialSubtraction'] else "Thresholding"
+    print(f'\n[RealSense Mono Setup - {monoSetupVariant}]\n')
 
     # Camera
     realSenseResolution = (configs['sensor']['realSenseResolution']['width'],
