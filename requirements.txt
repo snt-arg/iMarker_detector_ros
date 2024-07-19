@@ -1,0 +1,10 @@
+catkin-pkg==1.0.0
+distro==1.9.0
+docutils==0.20.1
+numpy==1.24.4
+opencv-python==4.10.0.84
+pyparsing==3.1.2
+python-dateutil==2.9.0.post0
+PyYAML==6.0.1
+rospkg==1.5.1
+six==1.16.0

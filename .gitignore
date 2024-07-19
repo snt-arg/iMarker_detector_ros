@@ -70,3 +70,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Python Virtual Environment
+.venv/
