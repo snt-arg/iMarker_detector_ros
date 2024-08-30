@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import rospy
-from utils.readConfig import readConfig
-# import cv2 as cv
+import cv2 as cv
 # import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-# import src.csr_sensors.sensors.sensorUSB as usb
+from utils.readConfig import readConfig
+import csr_sensors.sensors.sensorUSB as usb
 # from src.csr_detector.process import processStereoFrames
 # from utils.valueParser import thresholdParser, channelParser
 
@@ -41,57 +41,27 @@ def main():
     # ROS Bridge
     bridge = CvBridge()
 
-    # # Prepare the basic parameters
-    # try:
-    #     isThreshOts, isThreshBoth, isThreshBin = thresholdParser(
-    #         configs['postProcessing']['thresholdMethod'])
-    #     isRChannel, isGChannel, isBChannel, isAllChannels = channelParser(
-    #         configs['preProcessing']['channel'])
-    #     homographyMat = np.array(homography[configs['preProcessing']
-    #                                         ['homographyMat']])
-    #     # Prepare parameters based on what processor needs
-    #     params = {
-    #         'rChannel': isRChannel,
-    #         'gChannel': isGChannel,
-    #         'bChannel': isBChannel,
-    #         'threshbin': isThreshBin,
-    #         'threshots': isThreshOts,
-    #         'threshboth': isThreshBoth,
-    #         'allChannels': isAllChannels,
-    #         'homographyMat': homographyMat,
-    #         'windowWidth': configs['gui']['windowWidth'],
-    #         'maxFeatures': configs['processing']['maxFeatures'],
-    #         'threshold': configs['postProcessing']['threshold'],
-    #         'preAligment': configs['processing']['preAligment'],
-    #         'isMarkerLeftHanded': configs['markers']['leftHanded'],
-    #         'erosionKernel': configs['postProcessing']['erodeKernelSize'],
-    #         'enableCircularMask': configs['processing']['enableCircularROI'],
-    #         'goodMatchPercentage': configs['processing']['goodMatchPercentage'],
-    #         'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
-    #         'circlularMaskCoverage': configs['processing']['circlularMaskCoverage'],
-    #     }
-    # except:
-    #     rospy.logerr("Error in fetching parameters! Exiting ...")
-    #     exit()
+    # Camera
+    capL = usb.createCameraObject(cfgUsbCam['ports']['lCam'])
+    capR = usb.createCameraObject(cfgUsbCam['ports']['rCam'])
 
-    # # Camera
-    # capL = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
-    # capR = usb.createCameraObject(configs['sensor']['usbCamPorts']['rCam'])
+    if cfgGeneral['fpsBoost']:
+        capL.set(cv.CAP_PROP_FPS, 30.0)
+        capR.set(cv.CAP_PROP_FPS, 30.0)
 
-    # if configs['preProcessing']['fpsBoost']:
-    #     capL.set(cv.CAP_PROP_FPS, 30.0)
-    #     capR.set(cv.CAP_PROP_FPS, 30.0)
+    while not rospy.is_shutdown():
+        # Retrieve frames
+        retL, frameLRaw = usb.grabImage(capL)
+        retR, frameRRaw = usb.grabImage(capR)
 
-    # while not rospy.is_shutdown():
-    #     # Retrieve frames
-    #     # Note: if each of the cameras not working, retX will be False
-    #     retL, frameL = usb.grabImage(capL)
-    #     retR, frameR = usb.grabImage(capR)
+        # Check if both cameras are connected
+        if not retL and not retR:
+            rospy.logerr("[Error] no camera is connected! Exiting ...")
+            break
 
-    #     # Check if both cameras are connected
-    #     if (not (retL and retR)):
-    #         rospy.logerr("No connected devices found! Exiting ...")
-    #         exit()
+        # Flip the right frame
+        if (cfgUsbCam['flipImage']):
+            frameRRaw = cv.flip(frameRRaw, 1)
 
     #     # Change brightness
     #     frameL = cv.convertScaleAbs(
@@ -118,12 +88,12 @@ def main():
     #     publisherMask.publish(maskRos)
     #     publisherResult.publish(resultRos)
 
-    #     # Continue publishing
-    #     rate.sleep()
+        # Continue publishing
+        rate.sleep()
 
-    # capL.release()
-    # capR.release()
-
+    # Stop the pipeline
+    capL.release()
+    capR.release()
     rospy.loginfo(f'Framework stopped! [Double Vision USB Cameras Setup]')
 
 

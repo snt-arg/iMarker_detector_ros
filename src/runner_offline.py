@@ -41,36 +41,6 @@ def main():
     # ROS Bridge
     bridge = CvBridge()
 
-    #     # Prepare the basic parameters
-    # try:
-    #     isThreshOts, isThreshBoth, isThreshBin = thresholdParser(
-    #         configs['postProcessing']['thresholdMethod'])
-    #     isRChannel, isGChannel, isBChannel, isAllChannels = channelParser(
-    #         configs['preProcessing']['channel'])
-    #     # Prepare parameters based on what processor needs
-    #     params = {
-    #         'rChannel': isRChannel,
-    #         'gChannel': isGChannel,
-    #         'bChannel': isBChannel,
-    #         'threshbin': isThreshBin,
-    #         'threshots': isThreshOts,
-    #         'threshboth': isThreshBoth,
-    #         'allChannels': isAllChannels,
-    #         'windowWidth': configs['gui']['windowWidth'],
-    #         'maxFeatures': configs['processing']['maxFeatures'],
-    #         'threshold': configs['postProcessing']['threshold'],
-    #         'preAligment': configs['processing']['preAligment'],
-    #         'isMarkerLeftHanded': configs['markers']['leftHanded'],
-    #         'erosionKernel': configs['postProcessing']['erodeKernelSize'],
-    #         'enableCircularMask': configs['processing']['enableCircularROI'],
-    #         'goodMatchPercentage': configs['processing']['goodMatchPercentage'],
-    #         'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
-    #         'circlularMaskCoverage': configs['processing']['circlularMaskCoverage'],
-    #     }
-    # except:
-    #     rospy.logerr("Error in fetching parameters! Exiting ...")
-    #     exit()
-
     # # Camera
     # cap = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
 
