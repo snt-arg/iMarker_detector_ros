@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import rospy
+from utils.readConfig import readConfig
 # import cv2 as cv
 # import numpy as np
-# from cv_bridge import CvBridge
-# from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 # import src.csr_sensors.sensors.sensorUSB as usb
 # from src.csr_detector.process import processSingleFrame
 # from utils.valueParser import thresholdParser, channelParser
@@ -12,21 +13,33 @@ import rospy
 
 def main():
     # Initializing a ROS node
-    rospy.init_node('csr_detector_usbCamMono')
-    # rate = rospy.Rate(10)  # Publishing rate in Hz
-    # publisherCam = rospy.Publisher('main_camera', Image, queue_size=10)
-    # publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
-    # publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
+    rospy.init_node('iMarker_detector_off', anonymous=True)
 
-    # # ROS Bridge
-    # bridge = CvBridge()
+    # Loading configuration values
+    config = readConfig()
+    if config is None:
+        exit()
 
-    # # Loading configuration values
-    # try:
-    #     configs = rospy.get_param("~configs")
-    # except:
-    #     rospy.logerr("No Config file found! Exiting ...")
-    #     exit()
+    # Get the config values
+    cfgGui = config['gui']
+    cfgMode = config['mode']
+    cfgMarker = config['marker']
+    cfgOffline = config['sensor']['offline']
+
+    # Inform the user
+    setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
+    rospy.loginfo(
+        f'Framework started! [Offline Rosbag Captured by Single Vision Setup - {setupVariant}]')
+
+    # Setup publishers
+    rate = rospy.Rate(10)  # Publishing rate in Hz
+    pubRaw = rospy.Publisher('raw_img', Image, queue_size=10)
+    pubMask = rospy.Publisher('mask_img', Image, queue_size=10)
+    pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
+    pubMaskApplied = rospy.Publisher('mask_applied_img', Image, queue_size=10)
+
+    # ROS Bridge
+    bridge = CvBridge()
 
     #     # Prepare the basic parameters
     # try:
@@ -94,6 +107,9 @@ def main():
     #     rate.sleep()
 
     # cap.release()
+
+    rospy.loginfo(
+        f'Framework stopped! [Offline Rosbag Captured by Single Vision Setup - {setupVariant}]')
 
 
 # Run the main function

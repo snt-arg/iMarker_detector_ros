@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import rospy
+from utils.readConfig import readConfig
 # import cv2 as cv
 # import numpy as np
-# from cv_bridge import CvBridge
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image, CameraInfo
 # from src.csr_sensors.sensors import sensorRealSense
 # from utils.valueParser import thresholdParser, channelParser
@@ -12,26 +13,38 @@ from sensor_msgs.msg import Image, CameraInfo
 
 def main():
     # Initializing a ROS node
-    rospy.init_node('csr_detector_rsCam')
-    # rate = rospy.Rate(10)  # Publishing rate in Hz
-    # publisherCam = rospy.Publisher('main_camera', Image, queue_size=10)
-    # publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
-    # publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
-    # publisherCamParam = rospy.Publisher(
-    #     'rs_camera_params', CameraInfo, queue_size=10)
+    rospy.init_node('iMarker_detector_rs', anonymous=True)
+
+    # Loading configuration values
+    config = readConfig()
+    if config is None:
+        exit()
+
+    # Get the config values
+    cfgGui = config['gui']
+    cfgMode = config['mode']
+    cfgMarker = config['marker']
+    cfgRS = config['sensor']['realSense']
+
+    # Inform the user
+    setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
+    rospy.loginfo(
+        f'Framework started! [RealSense Single Vision Setup - {setupVariant}]')
+
+    # Setup publishers
+    rate = rospy.Rate(10)  # Publishing rate in Hz
+    pubRaw = rospy.Publisher('raw_img', Image, queue_size=10)
+    pubMask = rospy.Publisher('mask_img', Image, queue_size=10)
+    pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
+    pubMaskApplied = rospy.Publisher('mask_applied_img', Image, queue_size=10)
+    pubCameraParams = rospy.Publisher(
+        'rs_cam_params', CameraInfo, queue_size=10)
+
+    # ROS Bridge
+    bridge = CvBridge()
 
 #     # Previous frame
 #     prevFrame = None
-
-#     # ROS Bridge
-#     bridge = CvBridge()
-
-#     # Loading configuration values
-#     try:
-#         configs = rospy.get_param("~configs")
-#     except:
-#         rospy.logerr("No Config file found! Exiting ...")
-#         exit()
 
 #     # Prepare the basic parameters
 #     try:
@@ -125,6 +138,9 @@ def main():
 #         # Stop the pipeline and close the windows
 #         rospy.logerr("Error in RealSense pipeline! Exiting ...")
 #         rs.stopPipeline()
+
+    rospy.loginfo(
+        f'Framework stopped! [RealSense Single Vision Setup - {setupVariant}]')
 
 
 # def getCameraInfo(intrinsics):

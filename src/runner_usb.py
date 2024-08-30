@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import rospy
+from utils.readConfig import readConfig
 # import cv2 as cv
 # import numpy as np
-# from cv_bridge import CvBridge
-# from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 # import src.csr_sensors.sensors.sensorUSB as usb
 # from src.csr_detector.process import processStereoFrames
 # from utils.valueParser import thresholdParser, channelParser
@@ -12,23 +13,33 @@ import rospy
 
 def main():
     # Initializing a ROS node
-    rospy.init_node('csr_detector_usbCam')
-    # rate = rospy.Rate(10)  # Publishing rate in Hz
-    # publisherMask = rospy.Publisher('result_mask', Image, queue_size=10)
-    # publisherCamL = rospy.Publisher('left_camera', Image, queue_size=10)
-    # publisherCamR = rospy.Publisher('right_camera', Image, queue_size=10)
-    # publisherResult = rospy.Publisher('result_frame', Image, queue_size=10)
+    rospy.init_node('iMarker_detector_usb', anonymous=True)
 
-    # # ROS Bridge
-    # bridge = CvBridge()
+    # Loading configuration values
+    config = readConfig()
+    if config is None:
+        exit()
 
-    # # Loading configuration values
-    # try:
-    #     configs = rospy.get_param("~configs")
-    #     homography = rospy.get_param("~homographyList")
-    # except:
-    #     rospy.logerr("No Config file found! Exiting ...")
-    #     exit()
+    # Get the config values
+    cfgGui = config['gui']
+    cfgMode = config['mode']
+    cfgMarker = config['marker']
+    cfgUsbCam = config['sensor']['usbCam']
+    cfgGeneral = config['sensor']['general']
+
+    # Inform the user
+    rospy.loginfo(f'Framework started! [Double Vision USB Cameras Setup]')
+
+    # Setup publishers
+    rate = rospy.Rate(10)  # Publishing rate in Hz
+    pubMask = rospy.Publisher('mask_img', Image, queue_size=10)
+    pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
+    pubRawL = rospy.Publisher('raw_img_left', Image, queue_size=10)
+    pubRawR = rospy.Publisher('raw_img_right', Image, queue_size=10)
+    pubMaskApplied = rospy.Publisher('mask_applied_img', Image, queue_size=10)
+
+    # ROS Bridge
+    bridge = CvBridge()
 
     # # Prepare the basic parameters
     # try:
@@ -112,6 +123,8 @@ def main():
 
     # capL.release()
     # capR.release()
+
+    rospy.loginfo(f'Framework stopped! [Double Vision USB Cameras Setup]')
 
 
 # Run the main function
