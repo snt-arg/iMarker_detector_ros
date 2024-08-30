@@ -1,14 +1,13 @@
 <launch>
     <!-- Control arguments -->
     <arg name="show_rviz" default="true" />
-
+    
     <!-- Visualization -->
     <node if="$(arg show_rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
 
     <!-- Main Node -->
-    <node name="csr_detector" pkg="csr_detector_ros" type="main_ids.py" output="screen">
-        <rosparam command="load" file="$(find csr_detector_ros)/config/config_ids.yaml" />
-        <rosparam command="load" file="$(find csr_detector_ros)/config/cam_homography.yaml" />
+    <node name="csr_detector" pkg="csr_detector_ros" type="runner_usb.py" output="screen">
+        <rosparam command="load" file="$(find csr_detector_ros)/config/config.yaml" />
     </node>
 
 </launch>

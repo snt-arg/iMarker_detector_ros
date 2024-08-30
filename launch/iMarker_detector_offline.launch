@@ -6,8 +6,8 @@
     <node if="$(arg show_rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/mono_camera.rviz" output="screen" />
 
     <!-- Main Node -->
-    <node name="csr_detector" pkg="csr_detector_ros" type="main_rs.py" output="screen">
-        <rosparam command="load" file="$(find csr_detector_ros)/config/config_rs.yaml" />
+    <node name="csr_detector" pkg="csr_detector_ros" type="runner_offline.py" output="screen">
+        <rosparam command="load" file="$(find csr_detector_ros)/config/config.yaml" />
     </node>
 
 </launch>
