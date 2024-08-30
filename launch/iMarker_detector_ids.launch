@@ -1,6 +1,6 @@
 <launch>
     <!-- Control arguments -->
-    <arg name="show_rviz" default="true" />
+    <arg name="show_rviz" default="false" />
 
     <!-- Visualization -->
     <node if="$(arg show_rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find csr_detector_ros)/config/double_camera.rviz" output="screen" />
