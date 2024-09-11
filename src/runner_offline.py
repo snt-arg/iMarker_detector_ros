@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
+import os
 import rospy
-from utils.readConfig import readConfig
-# import cv2 as cv
-# import numpy as np
+import cv2 as cv
+import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-# import src.csr_sensors.sensors.sensorUSB as usb
-# from src.csr_detector.process import processSingleFrame
-# from utils.valueParser import thresholdParser, channelParser
+from utils.readConfig import readConfig
+from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from csr_detector.process import processSingleFrame, processSequentialFrames
 
 
 def main():
@@ -21,10 +21,10 @@ def main():
         exit()
 
     # Get the config values
-    cfgGui = config['gui']
     cfgMode = config['mode']
     cfgMarker = config['marker']
-    cfgOffline = config['sensor']['offline']
+    cfgGeneral = config['sensor']['general']
+    cfgOffline = config['sensor']['offline']['rosbag']
 
     # Inform the user
     setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
@@ -41,45 +41,74 @@ def main():
     # ROS Bridge
     bridge = CvBridge()
 
-    # # Camera
-    # cap = usb.createCameraObject(configs['sensor']['usbCamPorts']['lCam'])
+    # Variables
+    prevFrame = None
+    frameMask = None
+    frameMaskApplied = None
 
-    # if configs['preProcessing']['fpsBoost']:
-    #     cap.set(cv.CAP_PROP_FPS, 30.0)
+    def fetchRawImage(msg):
+        nonlocal prevFrame, frameMask, frameMaskApplied
 
-    # while not rospy.is_shutdown():
-    #     # Retrieve frames
-    #     ret, frame = usb.grabImage(cap)
+        # Convert the ROS image message to an OpenCV image
+        currFrame = bridge.imgmsg_to_cv2(msg, "bgr8")
 
-    #     # Check if both cameras are connected
-    #     if (not ret):
-    #         rospy.logerr("No connected devices found! Exiting ...")
-    #         exit()
+        # Change brightness
+        currFrame = cv.convertScaleAbs(
+            currFrame, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
 
-    #     # Change brightness
-    #     frame = cv.convertScaleAbs(
-    #         frame, alpha=configs['sensor']['brightness']['alpha'], beta=configs['sensor']['brightness']['beta'])
+        # Only the first time, copy the current frame to the previous frame
+        if prevFrame is None:
+            prevFrame = np.copy(currFrame)
 
-    #     # Convert to ROS
-    #     frameRos = bridge.cv2_to_imgmsg(frame, "bgr8")
-    #     publisherCam.publish(frameRos)
+        # Process frames
+        if cfgMode['sequentialSubtraction']:
+            pFrame, cFrame, frameMask = processSequentialFrames(
+                prevFrame, currFrame, True, config)
+            # Apply the mask
+            frameMaskApplied = cv.bitwise_and(
+                cFrame, cFrame, mask=frameMask)
+        else:
+            # Keep the original frame
+            cFrameRGB = np.copy(currFrame)
+            # Process the frames
+            cFrame, frameMask = processSingleFrame(
+                currFrame, True, config)
+            # Apply the mask
+            frameMaskApplied = cv.bitwise_and(
+                cFrame, cFrame, mask=frameMask)
 
-    #     # Process frames
-    #     frame, mask = processSingleFrame(frame, ret, params)
+        # Convert the mask to RGB
+        frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
+        frameMaskApplied = cv.cvtColor(frameMaskApplied, cv.COLOR_BGR2RGB)
 
-    #     # Convert to ROS
-    #     maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
-    #     resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
-    #     publisherMask.publish(maskRos)
-    #     publisherResult.publish(resultRos)
+        # Preparing the frames for publishing
+        frameRawRos = bridge.cv2_to_imgmsg(currFrame, "bgr8")
+        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
+        frameMaskAppliedRos = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
-    #     # Continue publishing
-    #     rate.sleep()
+        # ArUco marker detection
+        frameMarker = arucoMarkerDetector(
+            frameMask, cfgMarker['detection']['dictionary'])
+        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
-    # cap.release()
+        # Publishing the frames
+        pubRaw.publish(frameRawRos)
+        pubMask.publish(frameMaskRos)
+        pubMarker.publish(frameMarkerRos)
+        pubMaskApplied.publish(frameMaskAppliedRos)
+
+        # Save the previous frame
+        prevFrame = np.copy(currFrame)
+
+    # Subscribe to the image topic from the rosbag
+    rospy.Subscriber(cfgOffline['raw_image_topic'], Image, fetchRawImage)
+
+    # Keep the node running
+    rospy.spin()
 
     rospy.loginfo(
         f'Framework stopped! [Offline Rosbag Captured by Single Vision Setup - {setupVariant}]')
+    rospy.signal_shutdown('Finished')
 
 
 # Run the main function
