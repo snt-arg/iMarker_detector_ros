@@ -17,16 +17,14 @@ def main():
     rospy.init_node('iMarker_detector_usb', anonymous=True)
 
     # Initialize rospkg to get the package path
-    packagePath = ''
     rospack = rospkg.RosPack()
 
     try:
         # Get the package path
         packagePath = rospack.get_path('csr_detector_ros')
-        notFoundImagePath = os.path.join(
-            packagePath, 'src/notFound.png')
+        notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
     except rospkg.common.ResourceNotFound as e:
-        rospy.logerr(f"Package not found: {e}")
+        rospy.logerr(f"[Error] ROS Package not found: {e}")
         return
 
     # Loading configuration values
@@ -56,6 +54,7 @@ def main():
     capL = usb.createCameraObject(cfgUsbCam['ports']['lCam'])
     capR = usb.createCameraObject(cfgUsbCam['ports']['rCam'])
 
+    # Check if the boost is enabled
     if cfgGeneral['fpsBoost']:
         capL.set(cv.CAP_PROP_FPS, 30.0)
         capR.set(cv.CAP_PROP_FPS, 30.0)

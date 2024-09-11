@@ -1,40 +1,42 @@
 configs:
-  gui:
-    windowWidth: 1800
+  mode:
+    runner: "ids"
   sensor:
-    exposureTime: 20000
-    brightness:
-      alpha: 5.0
-      beta: 0.0
-  markers:
-    leftHanded: false
-  preProcessing:
-    fpsBoost: true
-    channel: "g"
-    roiDimension:
-      cap1:
-        x: 520
-        y: 200
-        width: 976
-        height: 1094
-      cap2:
-        x: 480
-        y: 212
-        width: 976
-        height: 1094
-    homographyMat: "Settings2"
-    sensorProjectConfigPath: "csr_sensors/sensors/config"
-  processing:
-    flipImage: true
-    maxFeatures: 500
-    preAligment: true
-    invertBinaryImage: true
-    goodMatchPercentage: 0.4
-    enableCircularROI: false
-    circlularMaskCoverage: 0.8
-    isSequentialSubtraction: true
-  postProcessing:
-    threshold: 35
-    erodeKernelSize: 5
-    gaussianBlurKernelSize: 3
-    thresholdMethod: "binary"
+    general:
+      fpsBoost: true
+      brightness:
+        alpha: 1.0
+        beta: 0.0
+    ids:
+      exposureTime: 20000
+      roi:
+        cap1:
+          x: 520
+          y: 300
+          width: 976
+          height: 900
+        cap2:
+          x: 480
+          y: 284
+          width: 976
+          height: 900
+  algorithm:
+    process:
+      alignment:
+        matchRate: 0.4
+        usePreset: true
+        maxFeatures: 500
+      channel: "g" # ["b", "g", "r", "all"]
+      subtractRL: true
+    postprocess:
+      threshold:
+        size: 50
+        method: "binary" # ["binary", "otsu", "both"]
+      invertBinary: true
+      erosionKernelSize: 1
+      gaussianKernelSize: 1
+  marker:
+    structure:
+      size: 0.1
+    detection:
+      dictionary: "DICT_ARUCO_ORIGINAL"
