@@ -1,19 +1,32 @@
 #!/usr/bin/env python3
 
+import os
 import rospy
-from utils.readConfig import readConfig
-# import cv2 as cv
-# import numpy as np
+import rospkg
+import cv2 as cv
+import numpy as np
 from cv_bridge import CvBridge
+from utils.readConfig import readConfig
 from sensor_msgs.msg import Image, CameraInfo
-# from src.csr_sensors.sensors import sensorRealSense
-# from utils.valueParser import thresholdParser, channelParser
-# from src.csr_detector.process import processSequentialFrames, processSingleFrame
+from csr_sensors.sensors import sensorRealSense
+from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from csr_detector.process import processSequentialFrames, processSingleFrame
 
 
 def main():
     # Initializing a ROS node
     rospy.init_node('iMarker_detector_rs', anonymous=True)
+
+    # Initialize rospkg to get the package path
+    rospack = rospkg.RosPack()
+
+    try:
+        # Get the package path
+        packagePath = rospack.get_path('csr_detector_ros')
+        notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
+    except rospkg.common.ResourceNotFound as e:
+        rospy.logerr(f"[Error] ROS Package not found: {e}")
+        return
 
     # Loading configuration values
     config = readConfig()
@@ -21,10 +34,10 @@ def main():
         exit()
 
     # Get the config values
-    cfgGui = config['gui']
     cfgMode = config['mode']
     cfgMarker = config['marker']
     cfgRS = config['sensor']['realSense']
+    cfgGeneral = config['sensor']['general']
 
     # Inform the user
     setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
@@ -43,120 +56,117 @@ def main():
     # ROS Bridge
     bridge = CvBridge()
 
-#     # Previous frame
-#     prevFrame = None
+    # Variables
+    prevFrame = None
+    frameMask = None
+    frameMaskApplied = None
 
-#     # Prepare the basic parameters
-#     try:
-#         isThreshOts, isThreshBoth, isThreshBin = thresholdParser(
-#             configs['postProcessing']['thresholdMethod'])
-#         isRChannel, isGChannel, isBChannel, isAllChannels = channelParser(
-#             configs['preProcessing']['channel'])
-#         # Prepare parameters based on what processor needs
-#         params = {
-#             'rChannel': isRChannel,
-#             'gChannel': isGChannel,
-#             'bChannel': isBChannel,
-#             'threshbin': isThreshBin,
-#             'threshots': isThreshOts,
-#             'threshboth': isThreshBoth,
-#             'allChannels': isAllChannels,
-#             'windowWidth': configs['gui']['windowWidth'],
-#             'threshold': configs['postProcessing']['threshold'],
-#             'isMarkerLeftHanded': configs['markers']['leftHanded'],
-#             'erosionKernel': configs['postProcessing']['erodeKernelSize'],
-#             'invertBinaryImage': configs['processing']['invertBinaryImage'],
-#             'enableCircularMask': configs['processing']['enableCircularROI'],
-#             'gaussianKernel': configs['postProcessing']['gaussianBlurKernelSize'],
-#         }
-#     except:
-#         rospy.logerr("Error in fetching parameters! Exiting ...")
-#         exit()
+    # Create an object
+    resolution = (cfgRS['resolution']['width'], cfgRS['resolution']['height'])
+    rs = sensorRealSense.rsCamera(resolution, cfgRS['fps'])
 
-#     monoSetupVariant = "Sequential Subtraction" if configs[
-#         'processing']['isSequentialSubtraction'] else "Thresholding"
-#     print(f'\n[RealSense Mono Setup - {monoSetupVariant}]\n')
+    # Create a pipeline
+    rs.createPipeline()
 
-#     # Camera
-#     realSenseResolution = (configs['sensor']['realSenseResolution']['width'],
-#                            configs['sensor']['realSenseResolution']['height'])
-#     rs = sensorRealSense.rsCamera(
-#         realSenseResolution, configs['sensor']['realSenseFps'])
+    # Start the pipeline
+    isPipelineStarted = rs.startPipeline()
 
-#     # Create a pipeline
-#     rs.createPipeline()
+    # Prepare a notFound image
+    notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
 
-#     # Start the pipeline
-#     rs.startPipeline()
+    while not rospy.is_shutdown():
+        # Check if the frames are valid
+        if not isPipelineStarted:
+            break
 
-#     try:
-#         while not rospy.is_shutdown():
+        # Wait for the next frames from the camera
+        frames = rs.grabFrames()
+        ret = False if frames is None else True
 
-#             # Wait for the next frames from the camera
-#             frames = rs.grabFrames()
+        # Check if the frames are valid
+        if not ret:
+            break
 
-#             # Get the color frame
-#             colorFrame, colorCamIntrinsics = rs.getColorFrame(frames)
+        # Get the color frame
+        currFrame, camParams = rs.getColorFrame(frames)
 
-#             # Change brightness
-#             colorFrame = cv.convertScaleAbs(
-#                 colorFrame, alpha=configs['sensor']['brightness']['alpha'],
-#                 beta=configs['sensor']['brightness']['beta'])
+        # Change brightness
+        currFrame = cv.convertScaleAbs(
+            currFrame, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
 
-#             if prevFrame is None:
-#                 prevFrame = np.copy(colorFrame)
+        # Only the first time, copy the current frame to the previous frame
+        if prevFrame is None:
+            prevFrame = np.copy(currFrame)
 
-#             # Convert to ROS
-#             frameRos = bridge.cv2_to_imgmsg(colorFrame, "bgr8")
-#             publisherCam.publish(frameRos)
+        # Process frames
+        if (cfgMode['sequentialSubtraction']):
+            # Process the frames
+            pFrame, cFrame, frameMask = processSequentialFrames(
+                prevFrame, currFrame, True, config)
+            # Apply the mask
+            frameMaskApplied = cv.bitwise_and(
+                cFrame, cFrame, mask=frameMask)
+        else:
+            # Keep the original frame
+            cFrameRGB = np.copy(currFrame)
+            # Process the frames
+            cFrame, frameMask = processSingleFrame(
+                currFrame, True, config)
+            # Apply the mask
+            frameMaskApplied = cv.bitwise_and(
+                cFrame, cFrame, mask=frameMask)
 
-#             # Process frames
-#             if (configs['processing']['isSequentialSubtraction']):
-#                 frame, mask = processSequentialFrames(
-#                     prevFrame, colorFrame, True, params)
-#             else:
-#                 frame, mask = processSingleFrame(colorFrame, True, params)
+        # Camera Params
+        camInfoMsgs = getCameraInfo(camParams)
 
-#             # Camera Params
-#             # depthIntrinsics, colorIntrinsics = rs.getIntrinsicParams()
-#             camInfoMsgs = getCameraInfo(colorCamIntrinsics)
+        # Preparing the frames
+        frameRaw = currFrame if ret else notFoundImage
+        frameMask = frameMask if ret else notFoundImage
+        frameMask = frameMask if ret else notFoundImage
+        frameRawRos = bridge.cv2_to_imgmsg(frameRaw, "bgr8")
+        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "8UC1")
+        frameMaskApplied = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
-#             # Convert to ROS
-#             maskRos = bridge.cv2_to_imgmsg(mask, "bgr8")
-#             resultRos = bridge.cv2_to_imgmsg(frame, "bgr8")
-#             publisherMask.publish(maskRos)
-#             publisherResult.publish(resultRos)
-#             publisherCamParam.publish(camInfoMsgs)
+        # ArUco marker detection
+        frameMarker = arucoMarkerDetector(
+            frameMask, cfgMarker['detection']['dictionary'])
+        frameMarker = frameMarker if ret else notFoundImage
+        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "8UC1")
 
-#             # Save the previous frame
-#             prevFrame = np.copy(colorFrame)
+        # Publishing the frames
+        pubRaw.publish(frameRawRos)
+        pubMask.publish(frameMaskRos)
+        pubMarker.publish(frameMarkerRos)
+        pubCameraParams.publish(camInfoMsgs)
+        pubMaskApplied.publish(frameMaskApplied)
 
-#             # Continue publishing
-#             rate.sleep()
+        # Save the previous frame
+        prevFrame = np.copy(currFrame)
 
-#     finally:
-#         # Stop the pipeline and close the windows
-#         rospy.logerr("Error in RealSense pipeline! Exiting ...")
-#         rs.stopPipeline()
+        # Continue publishing
+        rate.sleep()
 
+    # Stop the pipeline and close the windows
+    if isPipelineStarted:
+        rs.stopPipeline()
     rospy.loginfo(
         f'Framework stopped! [RealSense Single Vision Setup - {setupVariant}]')
 
 
-# def getCameraInfo(intrinsics):
-#     # Create a message and fill it with calibration params
-#     camInfoMsgs = CameraInfo()
-#     camInfoMsgs.header.frame_id = 'camera_link'
-#     camInfoMsgs.width = intrinsics.width
-#     camInfoMsgs.height = intrinsics.height
-#     # Fill in the camera intrinsics (fx, fy, cx, cy)
-#     camInfoMsgs.K = [intrinsics.fx, 0, intrinsics.ppx,
-#                      0, intrinsics.fy, intrinsics.ppy,
-#                      0, 0, 1]
-#     # No distortion for RealSense cameras
-#     camInfoMsgs.D = [0, 0, 0, 0, 0]
-#     # Return it
-#     return camInfoMsgs
+def getCameraInfo(intrinsics):
+    # Create a message and fill it with calibration params
+    camInfoMsgs = CameraInfo()
+    camInfoMsgs.header.frame_id = 'camera_link'
+    camInfoMsgs.width = intrinsics.width
+    camInfoMsgs.height = intrinsics.height
+    # Fill in the camera intrinsics (fx, fy, cx, cy)
+    camInfoMsgs.K = [intrinsics.fx, 0, intrinsics.ppx,
+                     0, intrinsics.fy, intrinsics.ppy,
+                     0, 0, 1]
+    # No distortion for RealSense cameras
+    camInfoMsgs.D = [0, 0, 0, 0, 0]
+    # Return it
+    return camInfoMsgs
 
 
 # Run the main function

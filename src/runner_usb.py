@@ -59,6 +59,9 @@ def main():
         capL.set(cv.CAP_PROP_FPS, 30.0)
         capR.set(cv.CAP_PROP_FPS, 30.0)
 
+    # Prepare a notFound image
+    notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
+
     while not rospy.is_shutdown():
         # Retrieve frames
         retL, frameLRaw = usb.grabImage(capL)
@@ -78,9 +81,6 @@ def main():
             frameLRaw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
         frameRRaw = cv.convertScaleAbs(
             frameRRaw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
-
-        # Prepare a notFound image
-        notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
 
         # Process frames
         frameL, frameR, frameMask = processStereoFrames(

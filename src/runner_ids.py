@@ -80,6 +80,9 @@ def main():
     cap1.setExposureTime(cfgIDSCam['exposureTime'])
     cap2.setExposureTime(cfgIDSCam['exposureTime'])
 
+    # Prepare a notFound image
+    notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
+
     while not rospy.is_shutdown():
         # Retrieve frames
         frame1Raw = cap1.getFrame()
@@ -101,9 +104,6 @@ def main():
             frame1Raw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
         frame2Raw = cv.convertScaleAbs(
             frame2Raw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
-
-        # Prepare a notFound image
-        notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
 
         # Add the homography matrix to the config
         config['presetMat'] = homographyMat

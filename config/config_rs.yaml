@@ -1,24 +1,35 @@
 configs:
-  gui:
-    windowWidth: 1800
+  mode:
+    runner: "usb"
+    sequentialSubtraction: true # Only for single vision sensor ("rs", "offimg", "offvid")
   sensor:
-    brightness:
-      alpha: 1.0
-      beta: 0.0
-    realSenseFps: 30
-    realSenseResolution:
-      width: 640
-      height: 480
-  markers:
-    leftHanded: true
-  preProcessing:
-    channel: "g"
-  processing:
-    invertBinaryImage: true
-    enableCircularROI: false
-    isSequentialSubtraction: false
-  postProcessing:
-    threshold: 50
-    erodeKernelSize: 1
-    gaussianBlurKernelSize: 1
-    thresholdMethod: "binary"
+    general:
+      fpsBoost: true
+      brightness:
+        alpha: 1.0
+        beta: 0.0
+    realSense:
+      fps: 30
+      resolution:
+        width: 640
+        height: 480
+  algorithm:
+    process:
+      alignment:
+        matchRate: 0.4
+        usePreset: true
+        maxFeatures: 500
+      channel: "g" # ["b", "g", "r", "all"]
+      subtractRL: true
+    postprocess:
+      threshold:
+        size: 50
+        method: "binary" # ["binary", "otsu", "both"]
+      invertBinary: true
+      erosionKernelSize: 1
+      gaussianKernelSize: 1
+  marker:
+    structure:
+      size: 0.1
+    detection:
+      dictionary: "DICT_ARUCO_ORIGINAL"
