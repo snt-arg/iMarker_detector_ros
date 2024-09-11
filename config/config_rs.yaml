@@ -1,7 +1,7 @@
 configs:
   mode:
-    runner: "usb"
-    sequentialSubtraction: true # Only for single vision sensor ("rs", "offimg", "offvid")
+    runner: "rs"
+    sequentialSubtraction: false # Only for single vision sensor ("rs", "offimg", "offvid")
   sensor:
     general:
       fpsBoost: true

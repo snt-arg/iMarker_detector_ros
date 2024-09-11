@@ -119,19 +119,23 @@ def main():
         # Camera Params
         camInfoMsgs = getCameraInfo(camParams)
 
+        # Convert to RGB
+        frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
+        frameMaskApplied = cv.cvtColor(frameMaskApplied, cv.COLOR_BGR2RGB)
+
         # Preparing the frames
         frameRaw = currFrame if ret else notFoundImage
         frameMask = frameMask if ret else notFoundImage
-        frameMask = frameMask if ret else notFoundImage
+        frameMaskApplied = frameMaskApplied if ret else notFoundImage
         frameRawRos = bridge.cv2_to_imgmsg(frameRaw, "bgr8")
-        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "8UC1")
+        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
         frameMaskApplied = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
         # ArUco marker detection
         frameMarker = arucoMarkerDetector(
             frameMask, cfgMarker['detection']['dictionary'])
         frameMarker = frameMarker if ret else notFoundImage
-        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "8UC1")
+        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
         # Publishing the frames
         pubRaw.publish(frameRawRos)

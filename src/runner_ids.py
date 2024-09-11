@@ -112,19 +112,22 @@ def main():
         frame1, frame2, frameMask = processStereoFrames(
             frame1Raw, frame2Raw, retL, retR, config, False)
 
+        # Convert to RGB
+        frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
+
         # Preparing the frames
         frame1Raw = frame1Raw if retL else notFoundImage
         frame2Raw = frame2Raw if retR else notFoundImage
         frameMask = frameMask if (retR and retL) else notFoundImage
         frame1Ros = bridge.cv2_to_imgmsg(frame1Raw, "bgr8")
         frame2Ros = bridge.cv2_to_imgmsg(frame2Raw, "bgr8")
-        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "8UC1")
+        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
 
         # ArUco marker detection
         frameMarker = arucoMarkerDetector(
             frameMask, cfgMarker['detection']['dictionary'])
         frameMarker = frameMarker if (retR and retL) else notFoundImage
-        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "8UC1")
+        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
         # Publishing the frames
         pubRawL.publish(frame1Ros)
