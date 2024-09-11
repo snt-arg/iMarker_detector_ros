@@ -10,7 +10,6 @@ from utils.readConfig import readConfig
 import csr_sensors.sensors.sensorUSB as usb
 from csr_detector.process import processStereoFrames
 from marker_detector.arucoMarkerDetector import arucoMarkerDetector
-# from utils.valueParser import thresholdParser, channelParser
 
 
 def main():
@@ -36,7 +35,6 @@ def main():
         exit()
 
     # Get the config values
-    cfgMode = config['mode']
     cfgMarker = config['marker']
     cfgUsbCam = config['sensor']['usbCam']
     cfgGeneral = config['sensor']['general']
@@ -50,7 +48,6 @@ def main():
     pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
     pubRawL = rospy.Publisher('raw_img_left', Image, queue_size=10)
     pubRawR = rospy.Publisher('raw_img_right', Image, queue_size=10)
-    pubMaskApplied = rospy.Publisher('mask_applied_img', Image, queue_size=10)
 
     # ROS Bridge
     bridge = CvBridge()
@@ -90,10 +87,6 @@ def main():
         frameL, frameR, frameMask = processStereoFrames(
             frameLRaw, frameRRaw, retL, retR, config, True)
 
-        # ArUco marker detection
-        frameMarker = arucoMarkerDetector(
-            frameMask, cfgMarker['detection']['dictionary'])
-
         # Preparing the frames
         frameLRaw = frameLRaw if retL else notFoundImage
         frameRRaw = frameRRaw if retR else notFoundImage
@@ -101,6 +94,11 @@ def main():
         frameLRos = bridge.cv2_to_imgmsg(frameLRaw, "bgr8")
         frameRRos = bridge.cv2_to_imgmsg(frameRRaw, "bgr8")
         frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "8UC1")
+
+        # ArUco marker detection
+        frameMarker = arucoMarkerDetector(
+            frameMask, cfgMarker['detection']['dictionary'])
+        frameMarker = frameMarker if (retR and retL) else notFoundImage
         frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "8UC1")
 
         # Publishing the frames

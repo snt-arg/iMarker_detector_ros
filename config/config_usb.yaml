@@ -1,28 +1,37 @@
 configs:
-  gui:
-    windowWidth: 1800
+  mode:
+    runner: "usb"
+    sequentialSubtraction: false
   sensor:
-    usbCamPorts:
-      lCam: "/dev/video2"
-      rCam: "/dev/video4"
-    brightness:
-      alpha: 2.0
-      beta: 0.0
-  markers:
-    leftHanded: true
-  preProcessing:
-    fpsBoost: true
-    channel: "g"
-    homographyMat: "Settings2"
-  processing:
-    flipImage: true
-    maxFeatures: 500
-    preAligment: true
-    goodMatchPercentage: 0.4
-    enableCircularROI: true
-    circlularMaskCoverage: 0.8
-  postProcessing:
-    threshold: 10
-    erodeKernelSize: 3
-    gaussianBlurKernelSize: 3
-    thresholdMethod: "binary"
+    general:
+      fpsBoost: true
+      brightness:
+        alpha: 1.0
+        beta: 0.0
+    usbCam:
+      maskSize: 0.8
+      flipImage: true
+      enableMask: true
+      ports:
+        lCam: "/dev/video4"
+        rCam: "/dev/video6"
+  algorithm:
+    process:
+      alignment:
+        matchRate: 0.4
+        usePreset: true
+        maxFeatures: 500
+      channel: "g" # ["b", "g", "r", "all"]
+      subtractRL: true
+    postprocess:
+      threshold:
+        size: 50
+        method: "binary" # ["binary", "otsu", "both"]
+      invertBinary: false
+      erosionKernelSize: 1
+      gaussianKernelSize: 1
+  marker:
+    structure:
+      size: 0.1
+    detection:
+      dictionary: "DICT_ARUCO_ORIGINAL"
