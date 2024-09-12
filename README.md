@@ -1,38 +1,63 @@
-# CSR Detector ROS (with Rviz)
+# iMarker Detector ROS (with Rviz)
 
 ![Demo](docs/demo.gif "Demo")
 
-This repository contains the ROS version of CSR-based object detector which provides a wrapper over [csr_sensors](https://github.com/snt-arg/csr_sensors) and [csr_detector](https://github.com/snt-arg/csr_detector) and provides an Rviz user interface for monitoring the results. Accordingly, the application is dependant to the repositories below:
+This repository contains the **ROS-1** version of iMarker and CSR-based object detector, titled `csr_detector_ros`, mainly designed for **robotics** tasks. It provides a wrapper over [csr_sensors](https://github.com/snt-arg/csr_sensors) and [csr_detector](https://github.com/snt-arg/csr_detector) and uses an `Rviz` user interface for monitoring the results.
 
-## 📚 Preparation
+⚠️ In case you do not want to use the ROS-enabled version, you can also clone the [GUI-enabled standalone version](https://github.com/snt-arg/csr_detector_standalone).
 
-### I. Cloning
+## 🛠️ Getting Started
 
-Create a new workspace and clone the repo in its `src` folder. This repo has some submodules which have been added using the command `git submodule add git@[repo].git src/[name]`. When cloning the repository include `--recurse-submodules` after `git clone` such that the submodules are added as well. Accordingly, you can use the command below:
+### I. Cloning the Repository
+
+Create a new ROS workspace and clone the repo in the `src` folder. Note that the current repository has some submodules that is highly dependent on them (added using the command `git submodule add git@[repo].git src/[name]`).
+
+Hence, when cloning the repository make sure to include `--recurse-submodules` after `git clone` such that the submodules are added as well, as below:
 
 ```
 git clone --recurse-submodules git@github.com:snt-arg/csr_detector_ros.git
 ```
 
-You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`. After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/csr_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
+You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`.
 
-### II. Installing Libraries
+💡 **[note]** In case you do not have SSH access, you can just download the code of [this library](https://github.com/snt-arg/csr_detector_standalone), and clone the [detector sensors](https://github.com/snt-arg/csr_sensors) inside `src/csr_sensors`, and [detector algorithms repo](https://github.com/snt-arg/csr_detector) inside `src/csr_detector` paths.
 
-Install the required Python libraries for running this program using the command below:
+After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/csr_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
+
+### II. Installation
+
+After cloning the repository, you need to install the required dependencies. The Python version used while developing the framework is `3.10.4`. It is highly recommended to create a Python virtual environment using `python -m venv .venv`, activate it using `source .venv/bin/activate`, and then install the required dependencies in the `requirements.txt` using the below command:
 
 ```
-pip install numpy opencv-python
+pip install -r requirements.txt
 ```
 
-### III. Installing Submodule Packages
+You can also install the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory of each file. Hence, follow the below steps:
 
-The next step is to intall the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory. Then, run `pip install -e .` in the **root directory** to install the package and its dependencies. You can also run the same command in the submodules directories to install them.
+- Go to `src/csr_sensors` and run `pip install -e .`,
+- Go to `src/csr_detector` and run `pip install -e .`,
+- Go to the **root directory** and run `pip install -e .` to install the package and its dependencies.
 
-### IV. Build Catkin Package
+### III. Build Catkin Package
 
 Finally, when everything has been installed, you can run `catkin build` to build the files.
 
 ## 🚀 Running the Code
+
+### I. Set Configurations
+
+The first step is to modify the configuration file. For a complete list of configurations you can take a look at [config.yaml](/config/config.yaml) or read the detailed descriptions [here](/config/README.md).
+
+⚠️ **[hint]** you can also find specified configuration files in the same folder, listed below.
+
+| Launcher          | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `config_off.yaml` | configurations for the offline (rosbag file) mode |
+| `config_usb.yaml` | configurations for ELP USB camera mode            |
+| `config_ids.yaml` | configurations for iDS camera mode                |
+| `config_rs.yaml`  | configurations for RealSense camera mode          |
+
+## II. Run the Desired Mode
 
 When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the nodes listed below:
 
