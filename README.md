@@ -50,63 +50,78 @@ The first step is to modify the configuration file. For a complete list of confi
 
 ⚠️ **[hint]** you can also find specified configuration files in the same folder, listed below.
 
-| Launcher          | Description                                       |
-| ----------------- | ------------------------------------------------- |
-| `config_off.yaml` | configurations for the offline (rosbag file) mode |
-| `config_usb.yaml` | configurations for ELP USB camera mode            |
-| `config_ids.yaml` | configurations for iDS camera mode                |
-| `config_rs.yaml`  | configurations for RealSense camera mode          |
+| Launcher                                     | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
+| [`config_off.yaml`](/config/config_off.yaml) | configurations for the offline (rosbag file) mode |
+| [`config_usb.yaml`](/config/config_rs.yaml)  | configurations for ELP USB camera mode            |
+| [`config_ids.yaml`](/config/config_ids.yaml) | configurations for iDS camera mode                |
+| [`config_rs.yaml`](/config/config_rs.yaml)   | configurations for RealSense camera mode          |
+| [`config.yaml`](/config/config.yaml)         | configurations for all cameras (combined)         |
 
 ## II. Run the Desired Mode
 
-When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the nodes listed below:
+When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the launch files listed below:
 
-| Launcher                      | Description                                   |
-| ----------------------------- | --------------------------------------------- |
-| `csr_detector_usb.launch`     | Runs the USB cameras version of the code      |
-| `csr_detector_ids.launch`     | Runs the iDS cameras version of the code      |
-| `csr_detector_rs.launch`      | Runs the RealSense camera version of the code |
-| `csr_detector_usbMono.launch` | Runs the mono USB camera version of the code  |
+| Launcher                          | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| `iMarker_detector_usb.launch`     | runs the double-vision USB camera version of the code       |
+| `iMarker_detector_offline.launch` | runs the double-vision iDS cameras version of the code      |
+| `iMarker_detector_rs.launch`      | runs the single-vision RealSense camera version of the code |
+| `iMarker_detector_ids.launch`     | runs the single-vision offline version of the code          |
 
-There are also some arguments that you can configure based on your scenario:
+You can also configure the parameters in the launch file, including the below list:
 
-- `show_rviz`: Runs an Rviz node when running the main node (default: true)
+- `show_rviz`: runs an `Rviz` node to show the framework inputs/outputs when running (default: true)
 
 For instance, the below command runs the RealSense version of CSR detector while not running Rviz:
 
-```
-roslaunch csr_detector_ros csr_detector_rs.launch show_rviz:=false
+```bash
+# Source ROS
+source /opt/ros/noetic/setup.bash
+
+# Source the workspace
+source ~/[workspace]/devel/setup.bash
+
+# Activate the .venv
+source ~/[workspace]/src/csr_detector_ros/.venv/bin/activate
+
+# Launch the desired launch file
+roslaunch csr_detector_ros iMarker_detector_[x].launch [show_rviz:=false]
 ```
 
 ## 🤖 ROS Topics and Params
 
-### Subscribed topics
+### Subscribed Topics
 
-| Topic | Description |
-| ----- | ----------- |
-| `-`   | N/A         |
+| Topic                     | Description                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `/camera/color/image_raw` | for offline mode, modifiable in `sensor`/`offline`/`rosbag`/`raw_image_topic` |
 
-### Published topics
+### Published Topics
 
-| Topic           | Description                                         |
-| --------------- | --------------------------------------------------- |
-| `/left_camera`  | Publishes the left camera of a two-camera setup     |
-| `/right_camera` | Publishes the right camera of a two-camera setup    |
-| `/main_camera`  | Publishes the main camera of a mono-camera setup    |
-| `/result_frame` | Publishes the resulting frame after processing      |
-| `/result_mask`  | Publishes the resulting frame mask after processing |
-
-### Params
-
-| Param | Description |
-| ----- | ----------- |
-| `-`   | N/A         |
+| Topic               | Description                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| `/raw_img`          | publishes the main camera output of the mono-vision setup    |
+| `/raw_img_left`     | publishes the left camera output of the double-vision setup  |
+| `/raw_img_right`    | publishes the right camera output of the double-vision setup |
+| `/mask_img`         | publishes the genetated mask to detect CSRs/iMarkers         |
+| `/mask_applied_img` | publishes the genetated mask applied to the raw image        |
+| `/marker_img`       | publishes the detected iMarker information                   |
+| `/rs_cam_params`    | publishes the camera parameters of RealSense                 |
 
 ## 🔩 ArUco Marker Recognition
 
-In order to recognize markers, you need to run `aruco_ros` library [link](https://github.com/pal-robotics/aruco_ros) separately and feed it with `/result_mask` and `/rs_camera_params` topic. For doing this, you should follow below steps:
+By default, the ArUco marker recognition library is built-in in all setups, processing `/mask_img` and publishing to `/marker_img`.
 
-- Create a separate `launch` file for `aruco_ros` library. It should remap `/result_mask` and `/rs_camera_params` of the repository with `/image` and `/camera_info` topics of `aruco_ros`, respectively. A sample can be found [here](docs/aruco_ros_csr_marker.launch).
-- Run the program using `roslaunch csr_detector_ros csr_detector_rs.launch`
+However, you can also run `aruco_ros` library (ROS-1 branch) [link](https://github.com/pal-robotics/aruco_ros) separately and feed it with `/mask_img` and `/rs_cam_params` topic. For doing this, you should follow below steps:
 
-⚠️ The current version of the code works for Mono-camera RealSense library only. Other sensors will have this ability later.
+- Create a separate `launch` file for `aruco_ros` library. It should remap `/mask_img` and `/rs_camera_params` of the repository with `/image` and `/camera_info` topics of `aruco_ros`, respectively. A sample can be found [here](docs/aruco_ros_imarker.launch).
+- Run the program using `roslaunch csr_detector_ros iMarker_detector_rs.launch`
+
+## 📝 TODOs
+
+You can find the list of future improvements and TODO list of the framework:
+
+- Publish the poses of the detected marker
+- Add the ability to capture images, similar to the standalone version
+- Publish the camera parameters of other setups to be used in `aruco_ros`
