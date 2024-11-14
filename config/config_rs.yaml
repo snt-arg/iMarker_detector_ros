@@ -15,15 +15,11 @@ configs:
         height: 480
   algorithm:
     process:
-      alignment:
-        matchRate: 0.4
-        usePreset: true
-        maxFeatures: 500
       channel: "g" # ["b", "g", "r", "all"]
       subtractRL: true
     postprocess:
       threshold:
-        size: 50
+        size: 90
         method: "binary" # ["binary", "otsu", "both"]
       invertBinary: true
       erosionKernelSize: 1

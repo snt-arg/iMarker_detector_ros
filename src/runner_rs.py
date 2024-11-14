@@ -88,7 +88,7 @@ def main():
             break
 
         # Get the color frame
-        currFrame, camParams = rs.getColorFrame(frames)
+        currFrame, cameraMatrix, distCoeffs = rs.getColorFrame(frames)
 
         # Change brightness
         currFrame = cv.convertScaleAbs(
@@ -117,7 +117,7 @@ def main():
                 cFrame, cFrame, mask=frameMask)
 
         # Camera Params
-        camInfoMsgs = getCameraInfo(camParams)
+        camInfoMsgs = getCameraInfo(currFrame.shape, cameraMatrix, distCoeffs)
 
         # Convert to RGB
         frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
@@ -133,7 +133,8 @@ def main():
 
         # ArUco marker detection
         frameMarker = arucoMarkerDetector(
-            frameMask, cfgMarker['detection']['dictionary'])
+            frameMask, cameraMatrix, distCoeffs, cfgMarker['detection']['dictionary'],
+            cfgMarker['structure']['size'])
         frameMarker = frameMarker if ret else notFoundImage
         frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
@@ -157,18 +158,16 @@ def main():
         f'Framework stopped! [RealSense Single Vision Setup - {setupVariant}]')
 
 
-def getCameraInfo(intrinsics):
+def getCameraInfo(frameShape, cameraMatrix, distCoeffs):
     # Create a message and fill it with calibration params
     camInfoMsgs = CameraInfo()
     camInfoMsgs.header.frame_id = 'camera_link'
-    camInfoMsgs.width = intrinsics.width
-    camInfoMsgs.height = intrinsics.height
+    camInfoMsgs.width = frameShape[0]
+    camInfoMsgs.height = frameShape[1]
     # Fill in the camera intrinsics (fx, fy, cx, cy)
-    camInfoMsgs.K = [intrinsics.fx, 0, intrinsics.ppx,
-                     0, intrinsics.fy, intrinsics.ppy,
-                     0, 0, 1]
+    camInfoMsgs.K = cameraMatrix.flatten()
     # No distortion for RealSense cameras
-    camInfoMsgs.D = [0, 0, 0, 0, 0]
+    camInfoMsgs.D = distCoeffs.flatten()
     # Return it
     return camInfoMsgs
 
