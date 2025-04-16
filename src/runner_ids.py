@@ -146,4 +146,10 @@ def main():
 
 # Run the main function
 if __name__ == '__main__':
-    main()
+    try:
+        import ids_peak
+        import ids_peak_ipl
+        main()
+    except ImportError:
+        print(
+            '[Error] Please install the `ids-peak` and `ids-peak-ipl` packages to use the iDS camera runner.')
