@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""
+📝 'iMarker Detector (ROS-based)' Software
+    SPDX-FileCopyrightText: (2025) University of Luxembourg
+    © 2025 University of Luxembourg
+    Developed by: Ali TOURANI et al. at SnT / ARG.
+
+'iMarker Detector (ROS-based)' is licensed under the "SNT NON-COMMERCIAL" License.
+You may not use this file except in compliance with the License.
+"""
+
 import os
 import rospy
 import cv2 as cv
