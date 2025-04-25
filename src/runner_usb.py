@@ -17,8 +17,8 @@ import cv2 as cv
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
-import csr_sensors.sensors.sensorUSB as usb
-from csr_detector.process import processStereoFrames
+import iMarker_sensors.sensors.usb_interface as usb
+from iMarker_algorithms.process import stereoFrameProcessing
 from marker_detector.arucoMarkerDetector import arucoMarkerDetector
 
 
@@ -31,7 +31,7 @@ def main():
 
     try:
         # Get the package path
-        packagePath = rospack.get_path('csr_detector_ros')
+        packagePath = rospack.get_path('imarker_detector_ros')
         notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
     except rospkg.common.ResourceNotFound as e:
         rospy.logerr(f"[Error] ROS Package not found: {e}")
@@ -93,7 +93,7 @@ def main():
             frameRRaw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
 
         # Process frames
-        frameL, frameR, frameMask = processStereoFrames(
+        frameL, frameR, frameMask = stereoFrameProcessing(
             frameLRaw, frameRRaw, retL, retR, config, True)
 
         # Convert to RGB

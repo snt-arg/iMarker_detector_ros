@@ -18,7 +18,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
 from marker_detector.arucoMarkerDetector import arucoMarkerDetector
-from csr_detector.process import processSingleFrame, processSequentialFrames
+from iMarker_algorithms.process import singleFrameProcessing, sequentialFrameProcessing
 
 
 def main():
@@ -72,7 +72,7 @@ def main():
 
         # Process frames
         if cfgMode['sequentialSubtraction']:
-            pFrame, cFrame, frameMask = processSequentialFrames(
+            pFrame, cFrame, frameMask = sequentialFrameProcessing(
                 prevFrame, currFrame, True, config)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(
@@ -81,7 +81,7 @@ def main():
             # Keep the original frame
             cFrameRGB = np.copy(currFrame)
             # Process the frames
-            cFrame, frameMask = processSingleFrame(
+            cFrame, frameMask = singleFrameProcessing(
                 currFrame, True, config)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(

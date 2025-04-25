@@ -2,9 +2,9 @@
 
 ![Demo](docs/demo.gif "Demo")
 
-This repository contains the **ROS-1** version of iMarker and CSR-based object detector, titled `csr_detector_ros`, mainly designed for **robotics** tasks. It provides a wrapper over [csr_sensors](https://github.com/snt-arg/csr_sensors) and [csr_detector](https://github.com/snt-arg/csr_detector) and uses an `Rviz` user interface for monitoring the results.
+This repository contains the **ROS-1** version of iMarker and CSR-based object detector, titled `imarker_detector_ros`, mainly designed for **robotics** tasks. It provides a wrapper over [iMarker_sensors](https://github.com/snt-arg/iMarker_sensors) and [iMarker_algorithms](https://github.com/snt-arg/iMarker_algorithms) and uses an `Rviz` user interface for monitoring the results.
 
-⚠️ In case you do not want to use the ROS-enabled version, you can also clone the [GUI-enabled standalone version](https://github.com/snt-arg/csr_detector_standalone).
+⚠️ In case you do not want to use the ROS-enabled version, you can also clone the [GUI-enabled standalone version](https://github.com/snt-arg/iMarker_algorithms_standalone).
 
 ## 🛠️ Getting Started
 
@@ -15,14 +15,14 @@ Create a new ROS workspace and clone the repo in the `src` folder. Note that the
 Hence, when cloning the repository make sure to include `--recurse-submodules` after `git clone` such that the submodules are added as well, as below:
 
 ```
-git clone --recurse-submodules git@github.com:snt-arg/csr_detector_ros.git
+git clone --recurse-submodules git@github.com:snt-arg/imarker_detector_ros.git
 ```
 
 You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`.
 
-💡 **[note]** In case you do not have SSH access, you can just download the code of [this library](https://github.com/snt-arg/csr_detector_standalone), and clone the [detector sensors](https://github.com/snt-arg/csr_sensors) inside `src/csr_sensors`, and [detector algorithms repo](https://github.com/snt-arg/csr_detector) inside `src/csr_detector` paths.
+💡 **[note]** In case you do not have SSH access, you can just download the code of [this library](https://github.com/snt-arg/iMarker_algorithms_standalone), and clone the [detector sensors](https://github.com/snt-arg/iMarker_sensors) inside `src/iMarker_sensors`, and [detector algorithms repo](https://github.com/snt-arg/iMarker_algorithms) inside `src/iMarker_algorithms` paths.
 
-After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/csr_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
+After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/imarker_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
 
 ### II. Installation
 
@@ -34,8 +34,8 @@ pip install -r requirements.txt
 
 You can also install the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory of each file. Hence, follow the below steps:
 
-- Go to `src/csr_sensors` and run `pip install -e .`,
-- Go to `src/csr_detector` and run `pip install -e .`,
+- Go to `src/iMarker_sensors` and run `pip install -e .`,
+- Go to `src/iMarker_algorithms` and run `pip install -e .`,
 - Go to the **root directory** and run `pip install -e .` to install the package and its dependencies.
 
 ### III. Build Catkin Package
@@ -50,13 +50,13 @@ The first step is to modify the configuration file. For a complete list of confi
 
 ⚠️ **[hint]** you can also find specified configuration files in the same folder, listed below.
 
-| Launcher                                     | Description                                       |
-| -------------------------------------------- | ------------------------------------------------- |
-| [`config_off.yaml`](/config/config_off.yaml) | configurations for the offline (rosbag file) mode |
-| [`config_usb.yaml`](/config/config_rs.yaml)  | configurations for ELP USB camera mode            |
-| [`config_ids.yaml`](/config/config_ids.yaml) | configurations for iDS camera mode                |
-| [`config_rs.yaml`](/config/config_rs.yaml)   | configurations for RealSense camera mode          |
-| [`config.yaml`](/config/config.yaml)         | configurations for all cameras (combined)         |
+| Launcher                                           | Description                                       |
+| -------------------------------------------------- | ------------------------------------------------- |
+| [`cfg_off.yaml`](/config/cfg_off.yaml)             | configurations for the offline (rosbag file) mode |
+| [`cfg_dual_usb.yaml`](/config/cfg_single_rs.yaml)  | configurations for ELP USB camera mode            |
+| [`cfg_dual_ids.yaml`](/config/cfg_dual_ids.yaml)   | configurations for iDS camera mode                |
+| [`cfg_single_rs.yaml`](/config/cfg_single_rs.yaml) | configurations for RealSense camera mode          |
+| [`config.yaml`](/config/config.yaml)               | configurations for all cameras (combined)         |
 
 ## II. Run the Desired Mode
 
@@ -83,10 +83,10 @@ source /opt/ros/noetic/setup.bash
 source ~/[workspace]/devel/setup.bash
 
 # Activate the .venv
-source ~/[workspace]/src/csr_detector_ros/.venv/bin/activate
+source ~/[workspace]/src/imarker_detector_ros/.venv/bin/activate
 
 # Launch the desired launch file
-roslaunch csr_detector_ros iMarker_detector_[x].launch [show_rviz:=false]
+roslaunch imarker_detector_ros iMarker_detector_[x].launch [show_rviz:=false]
 ```
 
 ## 🤖 ROS Topics and Params
@@ -116,7 +116,7 @@ By default, the ArUco marker recognition library is built-in in all setups, proc
 However, you can also run `aruco_ros` library (ROS-1 branch) [link](https://github.com/pal-robotics/aruco_ros) separately and feed it with `/mask_img` and `/rs_cam_params` topic. For doing this, you should follow below steps:
 
 - Create a separate `launch` file for `aruco_ros` library. It should remap `/mask_img` and `/rs_camera_params` of the repository with `/image` and `/camera_info` topics of `aruco_ros`, respectively. A sample can be found [here](docs/aruco_ros_imarker.launch).
-- Run the program using `roslaunch csr_detector_ros iMarker_detector_rs.launch`
+- Run the program using `roslaunch imarker_detector_ros iMarker_detector_rs.launch`
 
 ## 📝 TODOs
 

@@ -18,9 +18,9 @@ import numpy as np
 from cv_bridge import CvBridge
 from utils.readConfig import readConfig
 from sensor_msgs.msg import Image, CameraInfo
-from csr_sensors.sensors import sensorRealSense
+from iMarker_sensors.sensors import rs_interface
 from marker_detector.arucoMarkerDetector import arucoMarkerDetector
-from csr_detector.process import processSequentialFrames, processSingleFrame
+from iMarker_algorithms.process import sequentialFrameProcessing, singleFrameProcessing
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
 
     try:
         # Get the package path
-        packagePath = rospack.get_path('csr_detector_ros')
+        packagePath = rospack.get_path('imarker_detector_ros')
         notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
     except rospkg.common.ResourceNotFound as e:
         rospy.logerr(f"[Error] ROS Package not found: {e}")
@@ -73,7 +73,7 @@ def main():
 
     # Create an object
     resolution = (cfgRS['resolution']['width'], cfgRS['resolution']['height'])
-    rs = sensorRealSense.rsCamera(resolution, cfgRS['fps'])
+    rs = rs_interface.rsCamera(resolution, cfgRS['fps'])
 
     # Create a pipeline
     rs.createPipeline()
@@ -111,7 +111,7 @@ def main():
         # Process frames
         if (cfgMode['sequentialSubtraction']):
             # Process the frames
-            pFrame, cFrame, frameMask = processSequentialFrames(
+            pFrame, cFrame, frameMask = sequentialFrameProcessing(
                 prevFrame, currFrame, True, config)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(
@@ -120,7 +120,7 @@ def main():
             # Keep the original frame
             cFrameRGB = np.copy(currFrame)
             # Process the frames
-            cFrame, frameMask = processSingleFrame(
+            cFrame, frameMask = singleFrameProcessing(
                 currFrame, True, config)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(

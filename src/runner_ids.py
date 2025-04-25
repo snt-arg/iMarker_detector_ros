@@ -18,10 +18,10 @@ import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
-from csr_sensors.sensors import sensorIDS
-from csr_detector.process import processStereoFrames
-from csr_sensors.sensors.config.idsPresets import homographyMat
+from iMarker_sensors.sensors import ids_interface
+from iMarker_algorithms.process import stereoFrameProcessing
 from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from iMarker_sensors.sensors.config.presets import homographyMatrixPreset_iDS
 
 
 def main():
@@ -33,10 +33,10 @@ def main():
 
     try:
         # Get the package path
-        packagePath = rospack.get_path('csr_detector_ros')
+        packagePath = rospack.get_path('imarker_detector_ros')
         notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
         sensorsConfigPath = os.path.join(
-            packagePath, 'src/csr_sensors/sensors/config')
+            packagePath, 'src/iMarker_sensors/sensors/config')
     except rospkg.common.ResourceNotFound as e:
         rospy.logerr(f"[Error] ROS Package not found: {e}")
         return
@@ -65,8 +65,8 @@ def main():
     bridge = CvBridge()
 
     # Camera
-    cap1 = sensorIDS.idsCamera(0)
-    cap2 = sensorIDS.idsCamera(1)
+    cap1 = ids_interface.idsCamera(0)
+    cap2 = ids_interface.idsCamera(1)
 
     # Get the calibration configuration
     cap1.getCalibrationConfig(sensorsConfigPath, 'cam1')
@@ -116,10 +116,10 @@ def main():
             frame2Raw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
 
         # Add the homography matrix to the config
-        config['presetMat'] = homographyMat
+        config['presetMat'] = homographyMatrixPreset_iDS
 
         # Process frames
-        frame1, frame2, frameMask = processStereoFrames(
+        frame1, frame2, frameMask = stereoFrameProcessing(
             frame1Raw, frame2Raw, retL, retR, config, False)
 
         # Convert to RGB
