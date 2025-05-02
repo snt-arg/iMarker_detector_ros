@@ -26,7 +26,7 @@ from iMarker_sensors.sensors.config.presets import homographyMatrixPreset_iDS
 
 def main():
     # Initializing a ROS node
-    rospy.init_node('iMarker_detector_ids', anonymous=True)
+    rospy.init_node('iMarker_detector_dv_ids', anonymous=True)
 
     # Initialize rospkg to get the package path
     rospack = rospkg.RosPack()
@@ -52,7 +52,7 @@ def main():
     cfgGeneral = config['sensor']['general']
 
     # Inform the user
-    rospy.loginfo(f'Framework started! [Double Vision iDS Cameras Setup]')
+    rospy.loginfo(f'Framework started! [Dual-Vision iDS Cameras Setup]')
 
     # Setup publishers
     rate = rospy.Rate(10)  # Publishing rate in Hz
@@ -64,7 +64,7 @@ def main():
     # ROS Bridge
     bridge = CvBridge()
 
-    # Camera
+    # Fetch the cameras
     cap1 = ids_interface.idsCamera(0)
     cap2 = ids_interface.idsCamera(1)
 
@@ -73,10 +73,12 @@ def main():
     cap2.getCalibrationConfig(sensorsConfigPath, 'cam2')
 
     # Set the ROI
+    width = cfgIDSCam['roi']['cap1']['width']
+    height = cfgIDSCam['roi']['cap1']['height']
     cap1.setROI(cfgIDSCam['roi']['cap1']['x'], cfgIDSCam['roi']['cap1']
-                ['y'], cfgIDSCam['roi']['cap1']['width'], cfgIDSCam['roi']['cap1']['height'])
+                ['y'], width, height)
     cap2.setROI(cfgIDSCam['roi']['cap2']['x'], cfgIDSCam['roi']['cap2']
-                ['y'], cfgIDSCam['roi']['cap2']['width'], cfgIDSCam['roi']['cap2']['height'])
+                ['y'], width, height)
 
     # Synchronize the cameras
     cap1.syncAsMaster()
@@ -102,18 +104,19 @@ def main():
         retR = False if (not np.any(frame2Raw)) else True
 
         # Check if both cameras are connected
-        if not retL and not retR:
-            rospy.logerr("[Error] no camera is connected! Exiting ...")
+        if not (retL and retR):
+            print(
+                "\n[Error] Seems like cameras are not connected or not working properly. Exiting ...")
             break
 
         # Flip the right frame
         frame2Raw = cv.flip(frame2Raw, 1)
 
         # Change brightness
-        frame1Raw = cv.convertScaleAbs(
-            frame1Raw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
-        frame2Raw = cv.convertScaleAbs(
-            frame2Raw, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
+        beta = cfgGeneral['brightness']['beta']
+        alpha = cfgGeneral['brightness']['alpha']
+        frame1Raw = cv.convertScaleAbs(frame1Raw, alpha=alpha, beta=beta)
+        frame2Raw = cv.convertScaleAbs(frame2Raw, alpha=alpha, beta=beta)
 
         # Add the homography matrix to the config
         config['presetMat'] = homographyMatrixPreset_iDS
@@ -151,7 +154,7 @@ def main():
     # Stop the cameras
     cap1.closeLibrary()
     cap2.closeLibrary()
-    rospy.loginfo(f'Framework stopped! [Double Vision iDS Cameras Setup]')
+    rospy.loginfo(f'Framework stopped! [Dual-Vision iDS Cameras Setup]')
 
 
 # Run the main function
