@@ -1,7 +1,7 @@
 configs:
   mode:
     runner: "rs"
-    sequentialSubtraction: false # Only for single vision sensor ("rs", "offimg", "offvid")
+    temporalSubtraction: false # Only for single vision sensor ("rs", "offimg", "offvid")
   sensor:
     general:
       fpsBoost: true
@@ -17,13 +17,17 @@ configs:
     process:
       channel: "g" # ["b", "g", "r", "all"]
       subtractRL: true
+      colorRange:
+        hsv_green:
+          lower: [35, 120, 50] # [35, 120, 50]
+          upper: [85, 255, 255] # [85, 255, 255]
     postprocess:
       threshold:
         size: 90
         method: "binary" # ["binary", "otsu", "both"]
       invertBinary: true
-      erosionKernelSize: 1
-      gaussianKernelSize: 1
+      erosionKernel: 1
+      gaussianKernel: 1
   marker:
     structure:
       size: 0.1

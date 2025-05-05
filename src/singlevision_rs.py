@@ -50,7 +50,7 @@ def main():
     cfgGeneral = config['sensor']['general']
 
     # Inform the user
-    setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
+    setupVariant = "Sequential Subtraction" if cfgMode['temporalSubtraction'] else "Masking"
     rospy.loginfo(
         f'Framework started! [RealSense Single Vision Setup - {setupVariant}]')
 
@@ -109,7 +109,7 @@ def main():
             prevFrame = np.copy(currFrame)
 
         # Process frames
-        if (cfgMode['sequentialSubtraction']):
+        if (cfgMode['temporalSubtraction']):
             # Process the frames
             pFrame, cFrame, frameMask = sequentialFrameProcessing(
                 prevFrame, currFrame, True, config)

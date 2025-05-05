@@ -1,79 +1,95 @@
 # iMarker Detector ROS (with Rviz)
 
-![Demo](docs/demo.gif "Demo")
+![iMarker Detector ROS](docs/demo.gif "iMarker Detector ROS")
 
-This repository contains the **ROS-1** version of iMarker and CSR-based object detector, titled `imarker_detector_ros`, mainly designed for **robotics** tasks. It provides a wrapper over [iMarker_sensors](https://github.com/snt-arg/iMarker_sensors) and [iMarker_algorithms](https://github.com/snt-arg/iMarker_algorithms) and uses an `Rviz` user interface for monitoring the results.
+Welcome to the **iMarker Detector ROS** repository 💡!
+This project provides a **ROS-1 wrapper for iMarker Detection** for revealing and detecting **iMarkers** placed in the environment.
+The software has also a **standalone version** with GUI, available in [this link](https://github.com/snt-arg/iMarker_detector_standalone).
+To achieve the functionalities of the project, this tool integrates the following submodules:
 
-⚠️ In case you do not want to use the ROS-enabled version, you can also clone the [GUI-enabled standalone version](https://github.com/snt-arg/iMarker_algorithms_standalone).
+- 🔌 [iMarker Sensor Interfaces](https://github.com/snt-arg/iMarker_sensors) — capture and stream data from various camera setups
+- 👁️ [iMarker Detection Algorithms](https://github.com/snt-arg/iMarker_algorithms) — core image processing and marker extraction logic
+
+## 🧠 About iMarkers
+
+**iMarkers** are invisible fiducial markers detectable only by certain sensors and algorithms. They enable robust detection for human-robot interaction, AR applications, and indoor localization.
+Read more about iMarkers (developed for the TRANSCEND project at the [University of Luxembourg](https://www.uni.lu/en/)) in [this link](https://snt-arg.github.io/iMarkers/).
 
 ## 🛠️ Getting Started
 
-### I. Cloning the Repository
+This section will guide you through setting up the **iMarker Detector ROS** with all necessary submodules and dependencies.
 
-Create a new ROS workspace and clone the repo in the `src` folder. Note that the current repository has some submodules that is highly dependent on them (added using the command `git submodule add git@[repo].git src/[name]`).
+### I. Clone the Repository with Submodules
 
-Hence, when cloning the repository make sure to include `--recurse-submodules` after `git clone` such that the submodules are added as well, as below:
+Clone the repository along with its submodules ([sensor interfaces](https://github.com/snt-arg/iMarker_sensors) and [detector algorithms](https://github.com/snt-arg/iMarker_algorithms)) using:
 
+```bash
+git clone --recurse-submodules git@github.com:snt-arg/iMarker_detector_ros.git
 ```
-git clone --recurse-submodules git@github.com:snt-arg/imarker_detector_ros.git
+
+> 🛎️ Tip: If you have already cloned it without `--recurse-submodules`, you can initialize and update the submodules afterward:
+
+```bash
+git submodule update --init --recursive
 ```
 
-You can also get the latest changes of each submodule individually using the command `git pull --recurse-submodules`.
+After cloning the repository, you can add a command like `alias srcimd='source ~/workspace/devel/setup.bash'` in your `.bashrc` file.
 
-💡 **[note]** In case you do not have SSH access, you can just download the code of [this library](https://github.com/snt-arg/iMarker_algorithms_standalone), and clone the [detector sensors](https://github.com/snt-arg/iMarker_sensors) inside `src/iMarker_sensors`, and [detector algorithms repo](https://github.com/snt-arg/iMarker_algorithms) inside `src/iMarker_algorithms` paths.
+### II. Environment Setup & Installation
 
-After cloning the repository, you can add a command like `alias sourcecsr='source ~/workspace/ros/imarker_detector_ros_ws/devel/setup.bash'` in your `.bashrc` file.
+We recommend using `Python>=3.10.4` and a virtual environment to avoid package conflicts.
 
-### II. Installation
+#### 1. Create and activate a virtual environment:
 
-After cloning the repository, you need to install the required dependencies. The Python version used while developing the framework is `3.10.4`. It is highly recommended to create a Python virtual environment using `python -m venv .venv`, activate it using `source .venv/bin/activate`, and then install the required dependencies in the `requirements.txt` using the below command:
-
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
 ```
+
+#### 2. Install Dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-You can also install the cloned submodules and define dependencies and other distribution-related configurations using the provided `setup.py` file in the root directory of each file. Hence, follow the below steps:
-
-- Go to `src/iMarker_sensors` and run `pip install -e .`,
-- Go to `src/iMarker_algorithms` and run `pip install -e .`,
-- Go to the **root directory** and run `pip install -e .` to install the package and its dependencies.
-
-### III. Build Catkin Package
+#### 3. Build the Catkin Package:
 
 Finally, when everything has been installed, you can run `catkin build` to build the files.
 
 ## 🚀 Running the Code
 
-### I. Set Configurations
+### I. Configure the Application
 
-The first step is to modify the configuration file. For a complete list of configurations you can take a look at [config.yaml](/config/config.yaml) or read the detailed descriptions [here](/config/README.md).
+Before launching the application, you need to adjust the configuration settings to match your sensor setup and detection preferences.
 
-⚠️ **[hint]** you can also find specified configuration files in the same folder, listed below.
+- The main configuration file is located at [`config/config.yaml`](./config/) repository, where you can find various configuration files for different sensors.
+- For detailed explanations of each parameter, refer to the [configuration guide](./config/README.md).
 
-| Launcher                                           | Description                                       |
-| -------------------------------------------------- | ------------------------------------------------- |
-| [`cfg_off.yaml`](/config/cfg_off.yaml)             | configurations for the offline (rosbag file) mode |
-| [`cfg_dual_usb.yaml`](/config/cfg_single_rs.yaml)  | configurations for ELP USB camera mode            |
-| [`cfg_dual_ids.yaml`](/config/cfg_dual_ids.yaml)   | configurations for iDS camera mode                |
-| [`cfg_single_rs.yaml`](/config/cfg_single_rs.yaml) | configurations for RealSense camera mode          |
-| [`config.yaml`](/config/config.yaml)               | configurations for all cameras (combined)         |
+| Configuration                                      | Description                              |
+| -------------------------------------------------- | ---------------------------------------- |
+| [`cfg_dual_usb.yaml`](/config/cfg_dual_usb.yaml)   | Dual-vision USB camera setup             |
+| [`cfg_dual_ids.yaml`](/config/cfg_dual_ids.yaml)   | Dual-vision iDS camera setup             |
+| [`cfg_single_off.yaml`](/config/cfg_off.yaml)      | Single-vision offline `rosbag` file mode |
+| [`cfg_single_rs.yaml`](/config/cfg_single_rs.yaml) | Single-vision RealSense camera setup     |
+
+> 🛎️ Tip: The configuration is automatically parsed and applied when launching the application.
 
 ## II. Run the Desired Mode
 
-When everything is ready, you can source the workspace (running `sourcecsr` as described before) and run one of the launch files listed below:
+When everything is ready, you can source the workspace (running `srcimd` as described before) and run one of the launch files listed below:
 
-| Launcher                          | Description                                                 |
-| --------------------------------- | ----------------------------------------------------------- |
-| `iMarker_detector_usb.launch`     | runs the double-vision USB camera version of the code       |
-| `iMarker_detector_offline.launch` | runs the double-vision iDS cameras version of the code      |
-| `iMarker_detector_rs.launch`      | runs the single-vision RealSense camera version of the code |
-| `iMarker_detector_ids.launch`     | runs the single-vision offline version of the code          |
+| Launcher                                                                           | Description                             |
+| ---------------------------------------------------------------------------------- | --------------------------------------- |
+| [`imarker_detector_dual_usb.launch`](/launch/imarker_detector_dual_usb.launch)     | runs the dual-vision USB camera setup   |
+| [`imarker_detector_dual_ids.launch`](/launch/imarker_detector_dual_ids.launch)     | runs the dual-vision iDS camera setup   |
+| [`imarker_detector_single_off.launch`](/launch/imarker_detector_single_off.launch) | runs the single-vision offline `rosbag` |
+| [`imarker_detector_single_rs.launch`](/launch/imarker_detector_single_rs.launch)   | runs the single-vision RealSense setup  |
 
 You can also configure the parameters in the launch file, including the below list:
 
 - `show_rviz`: runs an `Rviz` node to show the framework inputs/outputs when running (default: true)
 
-For instance, the below command runs the RealSense version of CSR detector while not running Rviz:
+Once the configuration is set, navigate to the project root and launch one of the launch files:
 
 ```bash
 # Source ROS
@@ -86,8 +102,10 @@ source ~/[workspace]/devel/setup.bash
 source ~/[workspace]/src/imarker_detector_ros/.venv/bin/activate
 
 # Launch the desired launch file
-roslaunch imarker_detector_ros iMarker_detector_[x].launch [show_rviz:=false]
+roslaunch imarker_detector_ros imarker_detector_[x].launch [show_rviz:=false]
 ```
+
+The script will automatically launch the appropriate runner based on your selected mode.
 
 ## 🤖 ROS Topics and Params
 
@@ -118,10 +136,21 @@ However, you can also run `aruco_ros` library (ROS-1 branch) [link](https://gith
 - Create a separate `launch` file for `aruco_ros` library. It should remap `/mask_img` and `/rs_camera_params` of the repository with `/image` and `/camera_info` topics of `aruco_ros`, respectively. A sample can be found [here](docs/aruco_ros_imarker.launch).
 - Run the program using `roslaunch imarker_detector_ros iMarker_detector_rs.launch`
 
-## 📝 TODOs
+## 📎 Related Repositories
 
-You can find the list of future improvements and TODO list of the framework:
+It is intended to work in conjunction with the core detection and visualization pipelines:
 
-- Publish the poses of the detected marker
-- Add the ability to capture images, similar to the standalone version
-- Publish the camera parameters of other setups to be used in `aruco_ros`
+- 🔌 [iMarker Sensor Interfaces](https://github.com/snt-arg/iMarker_sensors)
+- 👁️ [iMarker Detector Algorithms](https://github.com/snt-arg/iMarker_algorithms)
+- 🤖 [GUI-enabled Version of iMarker Detection for Advanced Robotics](https://github.com/snt-arg/iMarker_detector_standalone)
+
+## 📚 Citation
+
+```bibtex
+@article{tourani2025unveiling,
+  title={Unveiling the Potential of iMarkers: Invisible Fiducial Markers for Advanced Robotics},
+  author={Tourani, Ali and Avsar, Deniz Isinsu and Bavle, Hriday and Sanchez-Lopez, Jose Luis and Lagerwall, Jan and Voos, Holger},
+  journal={arXiv preprint arXiv:2501.15505},
+  year={2025}
+}
+```

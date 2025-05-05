@@ -37,7 +37,7 @@ def main():
     cfgOffline = config['sensor']['offline']['rosbag']
 
     # Inform the user
-    setupVariant = "Sequential Subtraction" if cfgMode['sequentialSubtraction'] else "Masking"
+    setupVariant = "Sequential Subtraction" if cfgMode['temporalSubtraction'] else "Masking"
     rospy.loginfo(
         f'Framework started! [Offline Rosbag Captured by Single Vision Setup - {setupVariant}]')
 
@@ -71,7 +71,7 @@ def main():
             prevFrame = np.copy(currFrame)
 
         # Process frames
-        if cfgMode['sequentialSubtraction']:
+        if cfgMode['temporalSubtraction']:
             pFrame, cFrame, frameMask = sequentialFrameProcessing(
                 prevFrame, currFrame, True, config)
             # Apply the mask

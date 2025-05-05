@@ -1,7 +1,7 @@
 configs:
   mode:
     runner: "offvid"
-    sequentialSubtraction: false
+    temporalSubtraction: false
   sensor:
     general:
       fpsBoost: true
@@ -19,13 +19,17 @@ configs:
         maxFeatures: 500
       channel: "g" # ["b", "g", "r", "all"]
       subtractRL: true
+      colorRange:
+        hsv_green:
+          lower: [35, 120, 50] # [35, 120, 50]
+          upper: [85, 255, 255] # [85, 255, 255]
     postprocess:
       threshold:
         size: 50
         method: "binary" # ["binary", "otsu", "both"]
       invertBinary: true
-      erosionKernelSize: 1
-      gaussianKernelSize: 1
+      erosionKernel: 1
+      gaussianKernel: 1
   marker:
     structure:
       size: 0.1

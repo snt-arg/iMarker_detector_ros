@@ -1,5 +1,7 @@
 configs:
   mode:
+    # Dual-Vision Modes ("dv_usb", "dv_ids")
+    # Single-Vision Modes ("sv_offImg", "sv_offImgUV", "sv_offVid", "sv_usbUv", "sv_usbIr", "sv_rs")
     runner: "ids"
   sensor:
     general:
@@ -28,13 +30,17 @@ configs:
         maxFeatures: 500
       channel: "g" # ["b", "g", "r", "all"]
       subtractRL: true
+      colorRange:
+        hsv_green:
+          lower: [35, 120, 50] # [35, 120, 50]
+          upper: [85, 255, 255] # [85, 255, 255]
     postprocess:
       threshold:
         size: 50
         method: "binary" # ["binary", "otsu", "both"]
       invertBinary: true
-      erosionKernelSize: 1
-      gaussianKernelSize: 1
+      erosionKernel: 1
+      gaussianKernel: 1
   marker:
     structure:
       size: 0.1
