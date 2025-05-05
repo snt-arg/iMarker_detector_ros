@@ -19,7 +19,7 @@ from cv_bridge import CvBridge
 from utils.readConfig import readConfig
 from sensor_msgs.msg import Image, CameraInfo
 from iMarker_sensors.sensors import rs_interface
-from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from marker_detector.arucoDetector import arucoMarkerDetector
 from iMarker_algorithms.process import sequentialFrameProcessing, singleFrameProcessing
 
 

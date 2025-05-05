@@ -19,7 +19,7 @@ from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
 import iMarker_sensors.sensors.usb_interface as usb
 from iMarker_algorithms.process import stereoFrameProcessing
-from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from marker_detector.arucoDetector import arucoMarkerDetector
 
 
 def main():

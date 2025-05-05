@@ -17,7 +17,7 @@ import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
-from marker_detector.arucoMarkerDetector import arucoMarkerDetector
+from marker_detector.arucoDetector import arucoMarkerDetector
 from iMarker_algorithms.process import singleFrameProcessing, sequentialFrameProcessing
 
 

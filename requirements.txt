@@ -1,14 +1,10 @@
-catkin-pkg==1.0.0
-distro==1.9.0
-docutils==0.20.1
-ids-peak==1.4.3.0
-ids-peak-ipl==1.5.0.0
-numpy==1.24.4
-opencv-contrib-python==4.10.0.84
-opencv-python==4.10.0.84
-pyparsing==3.1.2
-pyrealsense2==2.55.1.6486
-python-dateutil==2.9.0.post0
-PyYAML==6.0.1
-rospkg==1.5.1
-six==1.16.0
+# Core libraries
+pyyaml>=6.0.1
+distro>=1.9.0
+numpy>=1.24.4
+opencv-python>=4.10.0.84
+opencv-contrib-python>=4.10.0.84
+
+# ROS
+rospkg>=1.5.1
+catkin-pkg>=1.0.0
