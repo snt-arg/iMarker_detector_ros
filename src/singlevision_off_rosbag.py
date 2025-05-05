@@ -17,7 +17,7 @@ import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
-from marker_detector.arucoDetector import arucoMarkerDetector
+from marker_detector.arucoDetector import arucoDetector
 from iMarker_algorithms.process import singleFrameProcessing, sequentialFrameProcessing
 
 
@@ -89,7 +89,6 @@ def main():
 
         # Convert the mask to RGB
         frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
-        frameMaskApplied = cv.cvtColor(frameMaskApplied, cv.COLOR_BGR2RGB)
 
         # Preparing the frames for publishing
         frameRawRos = bridge.cv2_to_imgmsg(currFrame, "bgr8")
@@ -97,7 +96,7 @@ def main():
         frameMaskAppliedRos = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
         # ArUco marker detection
-        frameMarker = arucoMarkerDetector(
+        frameMarker = arucoDetector(
             frameMask, cfgMarker['detection']['dictionary'])
         frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 

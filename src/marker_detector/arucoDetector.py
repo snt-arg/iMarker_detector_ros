@@ -47,8 +47,8 @@ def getArucoDict(dictName: str):
     return cv.aruco.getPredefinedDictionary(dictConstant)
 
 
-def arucoMarkerDetector(frame, cameraMatrix, distCoeffs, arucoDict: str,
-                        markerSize: float):
+def arucoDetector(frame, cameraMatrix, distCoeffs, arucoDict: str,
+                  markerSize: float):
     """
     Detects the markers in the frame and returns the frame with the detected markers.
 

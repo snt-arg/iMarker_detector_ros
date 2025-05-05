@@ -19,7 +19,8 @@ from cv_bridge import CvBridge
 from utils.readConfig import readConfig
 from sensor_msgs.msg import Image, CameraInfo
 from iMarker_sensors.sensors import rs_interface
-from marker_detector.arucoDetector import arucoMarkerDetector
+from utils.createRosMessage import getCameraInfo
+from marker_detector.arucoDetector import arucoDetector
 from iMarker_algorithms.process import sequentialFrameProcessing, singleFrameProcessing
 
 
@@ -118,7 +119,7 @@ def main():
                 cFrame, cFrame, mask=frameMask)
         else:
             # Keep the original frame
-            cFrameRGB = np.copy(currFrame)
+            # cFrameRGB = np.copy(currFrame)
             # Process the frames
             cFrame, frameMask = singleFrameProcessing(
                 currFrame, True, config)
@@ -131,7 +132,6 @@ def main():
 
         # Convert to RGB
         frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
-        frameMaskApplied = cv.cvtColor(frameMaskApplied, cv.COLOR_BGR2RGB)
 
         # Preparing the frames
         frameRaw = currFrame if ret else notFoundImage
@@ -142,7 +142,7 @@ def main():
         frameMaskApplied = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
         # ArUco marker detection
-        frameMarker = arucoMarkerDetector(
+        frameMarker = arucoDetector(
             frameMask, cameraMatrix, distCoeffs, cfgMarker['detection']['dictionary'],
             cfgMarker['structure']['size'])
         frameMarker = frameMarker if ret else notFoundImage
@@ -166,20 +166,6 @@ def main():
         rs.stopPipeline()
     rospy.loginfo(
         f'Framework stopped! [RealSense Single Vision Setup - {setupVariant}]')
-
-
-def getCameraInfo(frameShape, cameraMatrix, distCoeffs):
-    # Create a message and fill it with calibration params
-    camInfoMsgs = CameraInfo()
-    camInfoMsgs.header.frame_id = 'camera_link'
-    camInfoMsgs.width = frameShape[0]
-    camInfoMsgs.height = frameShape[1]
-    # Fill in the camera intrinsics (fx, fy, cx, cy)
-    camInfoMsgs.K = cameraMatrix.flatten()
-    # No distortion for RealSense cameras
-    camInfoMsgs.D = distCoeffs.flatten()
-    # Return it
-    return camInfoMsgs
 
 
 # Run the main function

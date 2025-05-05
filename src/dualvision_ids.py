@@ -20,7 +20,7 @@ from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
 from iMarker_sensors.sensors import ids_interface
 from iMarker_algorithms.process import stereoFrameProcessing
-from marker_detector.arucoDetector import arucoMarkerDetector
+from marker_detector.arucoDetector import arucoDetector
 from iMarker_sensors.sensors.config.presets import homographyMatrixPreset_iDS
 
 
@@ -137,7 +137,7 @@ def main():
         frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
 
         # ArUco marker detection
-        frameMarker = arucoMarkerDetector(
+        frameMarker = arucoDetector(
             frameMask, cfgMarker['detection']['dictionary'])
         frameMarker = frameMarker if (retR and retL) else notFoundImage
         frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
