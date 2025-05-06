@@ -107,7 +107,7 @@ roslaunch imarker_detector_ros imarker_detector_[x].launch [show_rviz:=false]
 
 The script will automatically launch the appropriate runner based on your selected mode.
 
-## 🤖 ROS Topics and Params
+## 🤖 ROS Topics and Parameters
 
 ### Subscribed Topics
 
