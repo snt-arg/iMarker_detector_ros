@@ -87,12 +87,12 @@ Before launching the application, you need to adjust the configuration settings 
 
 When everything is ready, you can source the workspace and run one of the launch files listed below:
 
-| Launcher                                                                                                          | Description                             |
-| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| [`imarker_detector_dual_usb.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_dual_usb.launch.py)    | runs the dual-vision USB camera setup   |
-| [`imarker_detector_dual_ids.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_dual_ids.launch.py)    | runs the dual-vision iDS camera setup   |
-| [`imarker_detector_single_off.launch.py`](/src/imarker_detector_ros/launch/imarker_detector_single_off.launch.py) | runs the single-vision offline `rosbag` |
-| [`imarker_detector_single_rs.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_single_rs.launch.py)  | runs the single-vision RealSense setup  |
+| Launcher                                                                                | Description                             |
+| --------------------------------------------------------------------------------------- | --------------------------------------- |
+| [`imarker_detector_dual_usb.launch.py`](/launch/imarker_detector_dual_usb.launch.py)    | runs the dual-vision USB camera setup   |
+| [`imarker_detector_dual_ids.launch.py`](/launch/imarker_detector_dual_ids.launch.py)    | runs the dual-vision iDS camera setup   |
+| [`imarker_detector_single_off.launch.py`](launch/imarker_detector_single_off.launch.py) | runs the single-vision offline `rosbag` |
+| [`imarker_detector_single_rs.launch.py`](/launch/imarker_detector_single_rs.launch.py)  | runs the single-vision RealSense setup  |
 
 Once the configuration is set, navigate to the project root and launch one of the launch files:
 
