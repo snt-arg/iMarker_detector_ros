@@ -1,13 +1,27 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd"
+  schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<package format="3">
   <name>imarker_detector_ros</name>
   <version>1.0.0</version>
-  <license>SNT NON-COMMERCIAL</license>
   <description>iMarker Detector ROS package</description>
-  <maintainer email="ali.tourani@uni.lu">Ali Tourani</maintainer>
+  <maintainer email="ali.tourani@uni.lu">Ali TOURANI</maintainer>
+  <license>SNT NON-COMMERCIAL</license>
   <url type="website">https://github.com/snt-arg/iMarker_detector_ros</url>
-  <author email="ali.tourani@uni.lu">Ali TOURANI</author>
-  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Build system dependency -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>ament_cmake_pytest</buildtool_depend>
+
+  <!-- Runtime and interface dependencies -->
+  <depend>rclpy</depend>
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs</depend>
+
+  <!-- Export the build type -->
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

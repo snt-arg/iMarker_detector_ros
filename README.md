@@ -19,9 +19,16 @@ Read more about iMarkers (developed for the TRANSCEND project at the [University
 
 This section will guide you through setting up the **iMarker Detector ROS** with all necessary submodules and dependencies.
 
-### I. Clone the Repository with Submodules
+### I. Create a ROS 2 Workspace and Clone the Repository with Submodules
 
-Clone the repository along with its submodules ([sensor interfaces](https://github.com/snt-arg/iMarker_sensors) and [detector algorithms](https://github.com/snt-arg/iMarker_algorithms)) using:
+First, create a new ROS 2 workspace and clone the repository into it:
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+```
+
+Clone the repository along with its submodules ([sensor interfaces](https://github.com/snt-arg/iMarker_sensors) and [detector algorithms](https://github.com/snt-arg/iMarker_algorithms)) in the `src` directory of the workspace using:
 
 ```bash
 git clone --recurse-submodules git@github.com:snt-arg/iMarker_detector_ros.git
@@ -32,8 +39,6 @@ git clone --recurse-submodules git@github.com:snt-arg/iMarker_detector_ros.git
 ```bash
 git submodule update --init --recursive
 ```
-
-After cloning the repository, you can add a command like `alias srcimd='source ~/workspace/devel/setup.bash'` in your `.bashrc` file.
 
 ### II. Environment Setup & Installation
 
@@ -54,7 +59,11 @@ pip install -r requirements.txt
 
 #### 3. Build the Catkin Package:
 
-Finally, when everything has been installed, you can run `catkin build` to build the files.
+Finally, return to the root of your workspace and build using `colcon`:
+
+```bash
+colcon build --symlink-install
+```
 
 ## 🚀 Running the Code
 
@@ -76,33 +85,28 @@ Before launching the application, you need to adjust the configuration settings 
 
 ## II. Run the Desired Mode
 
-When everything is ready, you can source the workspace (running `srcimd` as described before) and run one of the launch files listed below:
+When everything is ready, you can source the workspace and run one of the launch files listed below:
 
-| Launcher                                                                           | Description                             |
-| ---------------------------------------------------------------------------------- | --------------------------------------- |
-| [`imarker_detector_dual_usb.launch`](/launch/imarker_detector_dual_usb.launch)     | runs the dual-vision USB camera setup   |
-| [`imarker_detector_dual_ids.launch`](/launch/imarker_detector_dual_ids.launch)     | runs the dual-vision iDS camera setup   |
-| [`imarker_detector_single_off.launch`](/launch/imarker_detector_single_off.launch) | runs the single-vision offline `rosbag` |
-| [`imarker_detector_single_rs.launch`](/launch/imarker_detector_single_rs.launch)   | runs the single-vision RealSense setup  |
-
-You can also configure the parameters in the launch file, including the below list:
-
-- `show_rviz`: runs an `Rviz` node to show the framework inputs/outputs when running (default: true)
+| Launcher                                                                                                          | Description                             |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [`imarker_detector_dual_usb.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_dual_usb.launch.py)    | runs the dual-vision USB camera setup   |
+| [`imarker_detector_dual_ids.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_dual_ids.launch.py)    | runs the dual-vision iDS camera setup   |
+| [`imarker_detector_single_off.launch.py`](/src/imarker_detector_ros/launch/imarker_detector_single_off.launch.py) | runs the single-vision offline `rosbag` |
+| [`imarker_detector_single_rs.launch.py`](/src/imarker_detector_ros//launch/imarker_detector_single_rs.launch.py)  | runs the single-vision RealSense setup  |
 
 Once the configuration is set, navigate to the project root and launch one of the launch files:
 
 ```bash
-# Source ROS
-source /opt/ros/noetic/setup.bash
-
 # Source the workspace
-source ~/[workspace]/devel/setup.bash
+source ~/[workspace]/install/setup.bash
 
 # Activate the .venv
 source ~/[workspace]/src/imarker_detector_ros/.venv/bin/activate
 
 # Launch the desired launch file
-roslaunch imarker_detector_ros imarker_detector_[x].launch [show_rviz:=false]
+ros2 launch imarker_detector_ros imarker_detector_[x].launch.py
+# Or directly run the Python files
+# ros2 run imarker_detector_ros src/[file-name].py
 ```
 
 The script will automatically launch the appropriate runner based on your selected mode.
