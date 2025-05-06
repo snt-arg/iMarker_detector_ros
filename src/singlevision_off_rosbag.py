@@ -139,12 +139,12 @@ class IMarkerDetector(Node):
         # self.get_logger().info(
         #     f'Framework started! [Offline Rosbag Captured by Single Vision Setup - {self.setupVariant}]')
     
-    def destroyNode(self):
+    def destroy_node(self):
         self.get_logger().info("Shutting down the node...")
         super().destroy_node()
 
-def main(args=None):
-    rclpy.init(args=args)
+def main():
+    rclpy.init()
     node = IMarkerDetector()
 
     try:
@@ -153,7 +153,7 @@ def main(args=None):
         pass
     finally:
         if rclpy.ok():
-            node.destroyNode()
+            node.destroy_node()
             rclpy.shutdown()
 
 # Run the main function
