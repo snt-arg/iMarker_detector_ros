@@ -35,7 +35,7 @@ def generate_launch_description():
             package='imarker_detector_ros',
             executable='dualvision_ids.py',
             name='dualvision_ids_node',
-            parameters=[os.path.join(pkgDir, 'config', 'cfg_dual_ids.yaml')],
+            parameters=[os.path.join(pkgDir, 'config', 'configs.yaml')],
             output='screen',
         )
     ])

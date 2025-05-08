@@ -1,0 +1,66 @@
+/**:
+  ros__parameters:
+    mode:
+      # Dual-Vision Modes ("dv_usb", "dv_ids")
+      # Single-Vision Modes ("sv_offVid", "sv_rs")
+      runner: "sv_offVid"
+      # Only for single vision setups ("sv_*")
+      temporalSubtraction: False
+    sensor:
+      general:
+        fpsBoost: true
+        brightness:
+          alpha: 1.0
+          beta: 1.0
+      offline:
+        rosbag:
+          rawImageTopic: "/camera/color/image_raw"
+      usbCam:
+        maskSize: 0.8
+        flipImage: true
+        enableMask: false
+        ports:
+          lCam: "/dev/video4"
+          rCam: "/dev/video6"
+      ids:
+        exposureTime: 20000
+        roi:
+          cap1:
+            x: 520
+            y: 300
+            width: 976
+            height: 900
+          cap2:
+            x: 480
+            y: 284
+            width: 976
+            height: 900
+      realSense:
+        fps: 30
+        resolution:
+          width: 640 # 1280
+          height: 480 # 720
+    algorithm:
+      process:
+        alignment:
+          matchRate: 0.4
+          usePreset: true
+          maxFeatures: 500
+        subtractRL: true
+        channel: "g" # ["b", "g", "r", "all"]
+        colorRange:
+          hsv_green:
+            lower: [35, 120, 50] # [35, 120, 50]
+            upper: [85, 255, 255] # [85, 255, 255]
+      postprocess:
+        threshold:
+          size: 55
+          method: "binary" # ["binary", "otsu", "adaptive"]
+        invertBinary: true
+        erosionKernel: 1
+        gaussianKernel: 1
+    marker:
+      structure:
+        size: 0.07
+      detection:
+        dictionary: "DICT_ARUCO_ORIGINAL"

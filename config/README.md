@@ -1,6 +1,6 @@
 # ⚙️ Configuration Parameters
 
-You can find below various configurations of the framework, which can be modified in [`config.yml`](/config/config.yaml):
+You can find below various configurations of the framework, which can be modified in [`configs.yml`](/config/configs.yaml):
 
 | Main Category | Sub-Category  | Options               | Description                                                            |
 | ------------- | ------------- | --------------------- | ---------------------------------------------------------------------- |

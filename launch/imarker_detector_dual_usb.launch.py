@@ -35,7 +35,7 @@ def generate_launch_description():
             package='imarker_detector_ros',
             executable='dualvision_usb.py',
             name='dualvision_usb_node',
-            parameters=[os.path.join(pkgDir, 'config', 'cfg_dual_usb.yaml')],
+            parameters=[os.path.join(pkgDir, 'config', 'configs.yaml')],
             output='screen',
         ),
     ])

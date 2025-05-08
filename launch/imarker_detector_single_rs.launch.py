@@ -35,6 +35,7 @@ def generate_launch_description():
             package='imarker_detector_ros',
             executable='singlevision_rs.py',
             name='singlevision_rs_node',
+            parameters=[os.path.join(pkgDir, 'config', 'configs.yaml')],
             output='screen',
         ),
     ])

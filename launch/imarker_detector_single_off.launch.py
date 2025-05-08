@@ -35,7 +35,7 @@ def generate_launch_description():
             package='imarker_detector_ros',
             executable='singlevision_off_rosbag.py',
             name='singlevision_off_rosbag_node',
-            parameters=[os.path.join(pkgDir, 'config', 'cfg_off.yaml')],
+            parameters=[os.path.join(pkgDir, 'config', 'configs.yaml')],
             output='screen',
         )
     ])
