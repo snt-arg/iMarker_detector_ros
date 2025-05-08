@@ -11,150 +11,154 @@ You may not use this file except in compliance with the License.
 """
 
 import os
-import rospy
-import rospkg
+import rclpy
 import cv2 as cv
 import numpy as np
+from rclpy.node import Node
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from utils.readConfig import readConfig
 from iMarker_sensors.sensors import ids_interface
-from iMarker_algorithms.process import stereoFrameProcessing
 from marker_detector.arucoDetector import arucoDetector
+from iMarker_algorithms.process import stereoFrameProcessing
+from ament_index_python.packages import get_package_share_directory
 from iMarker_sensors.sensors.config.presets import homographyMatrixPreset_iDS
 
+class IMarkerDetector(Node):
+    def __init__(self: 'IMarkerDetector') -> None:
+        super().__init__('iMarker_detector_dv_ids')
+        self.bridge = CvBridge()
 
-def main():
-    # Initializing a ROS node
-    rospy.init_node('iMarker_detector_dv_ids', anonymous=True)
+        # Load the configuration file
+        self.configs = readConfig(self)
+        if self.configs is None:
+            self.get_logger().error("Failed to load configuration file.")
+            return
+        
+        # Get the config values
+        self.cfgMarker = self.configs['marker']
+        self.cfgIDSCam = self.configs['sensor']['ids']
+        self.cfgGeneral = self.configs['sensor']['general']
 
-    # Initialize rospkg to get the package path
-    rospack = rospkg.RosPack()
+        # Variables
 
-    try:
-        # Get the package path
-        packagePath = rospack.get_path('imarker_detector_ros')
-        notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
-        sensorsConfigPath = os.path.join(
-            packagePath, 'src/iMarker_sensors/sensors/config')
-    except rospkg.common.ResourceNotFound as e:
-        rospy.logerr(f"[Error] ROS Package not found: {e}")
-        return
+        # Inform the user
+        self.get_logger().info('Framework started! [Dual-Vision iDS Cameras Setup]')
 
-    # Loading configuration values
-    config = readConfig()
-    if config is None:
-        exit()
+        # Create publishers
+        self.pubMask = self.create_publisher(Image, 'mask_img', 10)
+        self.pubMarker = self.create_publisher(Image, 'marker_img', 10)
+        self.pubRawL = self.create_publisher(Image, 'raw_img_left', 10)
+        self.pubRawR = self.create_publisher(Image, 'raw_img_right', 10)
 
-    # Get the config values
-    cfgMarker = config['marker']
-    cfgIDSCam = config['sensor']['ids']
-    cfgGeneral = config['sensor']['general']
+        # Prepare a notFound image
+        pkgDir = get_package_share_directory('imarker_detector_ros')
+        notFoundImagePath = os.path.join(pkgDir, 'src/notFound.png')
+        self.notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
+        sensorsConfigPath = os.path.join(pkgDir, 'src/iMarker_sensors/sensors/config')
 
-    # Inform the user
-    rospy.loginfo(f'Framework started! [Dual-Vision iDS Cameras Setup]')
+        # Fetch the cameras
+        self.cap1 = ids_interface.idsCamera(0)
+        self.cap2 = ids_interface.idsCamera(1)
 
-    # Setup publishers
-    rate = rospy.Rate(10)  # Publishing rate in Hz
-    pubMask = rospy.Publisher('mask_img', Image, queue_size=10)
-    pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
-    pubRawL = rospy.Publisher('raw_img_left', Image, queue_size=10)
-    pubRawR = rospy.Publisher('raw_img_right', Image, queue_size=10)
+        # Get the calibration configuration
+        self.cap1.getCalibrationConfig(sensorsConfigPath, 'cam1')
+        self.cap2.getCalibrationConfig(sensorsConfigPath, 'cam2')
 
-    # ROS Bridge
-    bridge = CvBridge()
+        # Set the ROI
+        width = self.cfgIDSCam['roi']['cap1']['width']
+        height = self.cfgIDSCam['roi']['cap1']['height']
+        self.cap1.setROI(self.cfgIDSCam['roi']['cap1']['x'], self.cfgIDSCam['roi']['cap1']
+                    ['y'], width, height)
+        self.cap2.setROI(self.cfgIDSCam['roi']['cap2']['x'], self.cfgIDSCam['roi']['cap2']
+                    ['y'], width, height)
 
-    # Fetch the cameras
-    cap1 = ids_interface.idsCamera(0)
-    cap2 = ids_interface.idsCamera(1)
+        # Synchronize the cameras
+        self.cap1.syncAsMaster()
+        self.cap2.syncAsSlave()
 
-    # Get the calibration configuration
-    cap1.getCalibrationConfig(sensorsConfigPath, 'cam1')
-    cap2.getCalibrationConfig(sensorsConfigPath, 'cam2')
+        # Capture the frames
+        self.cap1.startAquisition()
+        self.cap2.startAquisition()
 
-    # Set the ROI
-    width = cfgIDSCam['roi']['cap1']['width']
-    height = cfgIDSCam['roi']['cap1']['height']
-    cap1.setROI(cfgIDSCam['roi']['cap1']['x'], cfgIDSCam['roi']['cap1']
-                ['y'], width, height)
-    cap2.setROI(cfgIDSCam['roi']['cap2']['x'], cfgIDSCam['roi']['cap2']
-                ['y'], width, height)
+        # Set the exposure time
+        self.cap1.setExposureTime(self.cfgIDSCam['exposureTime'])
+        self.cap2.setExposureTime(self.cfgIDSCam['exposureTime'])
 
-    # Synchronize the cameras
-    cap1.syncAsMaster()
-    cap2.syncAsSlave()
-
-    # Capture the frames
-    cap1.startAquisition()
-    cap2.startAquisition()
-
-    # Set the exposure time
-    cap1.setExposureTime(cfgIDSCam['exposureTime'])
-    cap2.setExposureTime(cfgIDSCam['exposureTime'])
-
-    # Prepare a notFound image
-    notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
-
-    while not rospy.is_shutdown():
+        # Create a timer to periodically read frames
+        clock = 0.1  # seconds
+        self.timer = self.create_timer(clock, self.process_frame)
+    
+    def process_frame(self):
         # Retrieve frames
-        frame1Raw = cap1.getFrame()
-        frame2Raw = cap2.getFrame()
+        frame1Raw = self.cap1.getFrame()
+        frame2Raw = self.cap2.getFrame()
 
         retL = False if (not np.any(frame1Raw)) else True
         retR = False if (not np.any(frame2Raw)) else True
 
-        # Check if both cameras are connected
         if not (retL and retR):
-            print(
-                "\n[Error] Seems like cameras are not connected or not working properly. Exiting ...")
-            break
-
+            self.get_logger().error("No camera is connected! Exiting ...")
+            return
+        
         # Flip the right frame
         frame2Raw = cv.flip(frame2Raw, 1)
 
         # Change brightness
-        beta = cfgGeneral['brightness']['beta']
-        alpha = cfgGeneral['brightness']['alpha']
+        beta = float(self.cfgGeneral['brightness']['beta'])
+        alpha = float(self.cfgGeneral['brightness']['alpha'])
         frame1Raw = cv.convertScaleAbs(frame1Raw, alpha=alpha, beta=beta)
         frame2Raw = cv.convertScaleAbs(frame2Raw, alpha=alpha, beta=beta)
 
         # Add the homography matrix to the config
-        config['presetMat'] = homographyMatrixPreset_iDS
+        self.configs['presetMat'] = homographyMatrixPreset_iDS
 
         # Process frames
         frame1, frame2, frameMask = stereoFrameProcessing(
-            frame1Raw, frame2Raw, retL, retR, config, False)
+            frame1Raw, frame2Raw, retL, retR, self.configs, False)
 
         # Convert to RGB
         frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
 
         # Preparing the frames
-        frame1Raw = frame1Raw if retL else notFoundImage
-        frame2Raw = frame2Raw if retR else notFoundImage
-        frameMask = frameMask if (retR and retL) else notFoundImage
-        frame1Ros = bridge.cv2_to_imgmsg(frame1Raw, "bgr8")
-        frame2Ros = bridge.cv2_to_imgmsg(frame2Raw, "bgr8")
-        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
+        frame1Raw = frame1Raw if retL else self.notFoundImage
+        frame2Raw = frame2Raw if retR else self.notFoundImage
+        frameMask = frameMask if (retR and retL) else self.notFoundImage
+        frame1Ros = self.bridge.cv2_to_imgmsg(frame1Raw, "bgr8")
+        frame2Ros = self.bridge.cv2_to_imgmsg(frame2Raw, "bgr8")
+        frameMaskRos = self.bridge.cv2_to_imgmsg(frameMask, "bgr8")
 
         # ArUco marker detection
         frameMarker = arucoDetector(
-            frameMask, cfgMarker['detection']['dictionary'])
-        frameMarker = frameMarker if (retR and retL) else notFoundImage
-        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
+            frameMask, self.cfgMarker['detection']['dictionary'])
+        frameMarker = frameMarker if (retR and retL) else self.notFoundImage
+        frameMarkerRos = self.bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
         # Publishing the frames
-        pubRawL.publish(frame1Ros)
-        pubRawR.publish(frame2Ros)
-        pubMask.publish(frameMaskRos)
-        pubMarker.publish(frameMarkerRos)
+        self.pubRawL.publish(frame1Ros)
+        self.pubRawR.publish(frame2Ros)
+        self.pubMask.publish(frameMaskRos)
+        self.pubMarker.publish(frameMarkerRos)
+    
+    def destroy_node(self):
+        # Stop the cameras
+        self.cap1.closeLibrary()
+        self.cap2.closeLibrary()
+        self.get_logger().info('Framework stopped! [Dual-Vision iDS Cameras Setup]')
+        super().destroy_node()
 
-        # Continue publishing
-        rate.sleep()
+def main(args=None):
+    rclpy.init(args=args)
+    node = IMarkerDetector()
 
-    # Stop the cameras
-    cap1.closeLibrary()
-    cap2.closeLibrary()
-    rospy.loginfo(f'Framework stopped! [Dual-Vision iDS Cameras Setup]')
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            node.destroy_node()
+            rclpy.shutdown()
 
 
 # Run the main function

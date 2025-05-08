@@ -11,122 +11,116 @@ You may not use this file except in compliance with the License.
 """
 
 import os
-import rospy
-import rospkg
+import rclpy
 import cv2 as cv
 import numpy as np
+from rclpy.node import Node
 from cv_bridge import CvBridge
 from utils.readConfig import readConfig
 from sensor_msgs.msg import Image, CameraInfo
 from iMarker_sensors.sensors import rs_interface
 from utils.createRosMessage import getCameraInfo
 from marker_detector.arucoDetector import arucoDetector
+from ament_index_python.packages import get_package_share_directory
 from iMarker_algorithms.process import sequentialFrameProcessing, singleFrameProcessing
 
+class IMarkerDetector(Node):
+    def __init__(self: 'IMarkerDetector') -> None:
+        super().__init__('iMarker_detector_rs')
+        self.bridge = CvBridge()
 
-def main():
-    # Initializing a ROS node
-    rospy.init_node('iMarker_detector_rs', anonymous=True)
+        # Load the configuration file
+        self.configs = readConfig(self)
+        if self.configs is None:
+            self.get_logger().error("Failed to load configuration file.")
+            return
+        
+        # Get the config values
+        self.cfgMode = self.configs['mode']
+        self.cfgMarker = self.configs['marker']
+        self.cfgRS = self.configs['sensor']['realSense']
+        self.cfgGeneral = self.configs['sensor']['general']
 
-    # Initialize rospkg to get the package path
-    rospack = rospkg.RosPack()
+        # Variables
+        self.prevFrame = None
+        self.frameMask = None
+        self.frameMaskApplied = None
 
-    try:
-        # Get the package path
-        packagePath = rospack.get_path('imarker_detector_ros')
-        notFoundImagePath = os.path.join(packagePath, 'src/notFound.png')
-    except rospkg.common.ResourceNotFound as e:
-        rospy.logerr(f"[Error] ROS Package not found: {e}")
-        return
+        # Inform the user
+        self.setupVariant = "Sequential Subtraction" if self.cfgMode[
+            'temporalSubtraction'] else "Masking"
+        self.get_logger().info(
+            f'Framework started! [RealSense Single Vision Setup - {self.setupVariant}]')
 
-    # Loading configuration values
-    config = readConfig()
-    if config is None:
-        exit()
+        # Create publishers
+        self.pubRaw = self.create_publisher(Image, 'raw_image', 10)
+        self.pubMask = self.create_publisher(Image, 'mask_image', 10)
+        self.pubMarker = self.create_publisher(Image, 'marker_image', 10)
+        self.pubMaskApplied = self.create_publisher(Image, 'mask_applied_image', 10)
+        self.pubCameraParams = self.create_publisher(
+            CameraInfo, 'rs_cam_params', 10)
+        
+        # Create an object
+        resolution = (self.cfgRS['resolution']['width'], self.cfgRS['resolution']['height'])
+        self.rs = rs_interface.rsCamera(resolution, self.cfgRS['fps'])
 
-    # Get the config values
-    cfgMode = config['mode']
-    cfgMarker = config['marker']
-    cfgRS = config['sensor']['realSense']
-    cfgGeneral = config['sensor']['general']
+        # Create a pipeline
+        self.rs.createPipeline()
 
-    # Inform the user
-    setupVariant = "Sequential Subtraction" if cfgMode['temporalSubtraction'] else "Masking"
-    rospy.loginfo(
-        f'Framework started! [RealSense Single Vision Setup - {setupVariant}]')
+        # Prepare a notFound image
+        pkgDir = get_package_share_directory('imarker_detector_ros')
+        notFoundImagePath = os.path.join(pkgDir, 'src/notFound.png')
+        self.notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
 
-    # Setup publishers
-    rate = rospy.Rate(10)  # Publishing rate in Hz
-    pubRaw = rospy.Publisher('raw_img', Image, queue_size=10)
-    pubMask = rospy.Publisher('mask_img', Image, queue_size=10)
-    pubMarker = rospy.Publisher('marker_img', Image, queue_size=10)
-    pubMaskApplied = rospy.Publisher('mask_applied_img', Image, queue_size=10)
-    pubCameraParams = rospy.Publisher(
-        'rs_cam_params', CameraInfo, queue_size=10)
+        # Start the pipeline
+        self.isPipelineStarted = self.rs.startPipeline()
 
-    # ROS Bridge
-    bridge = CvBridge()
-
-    # Variables
-    prevFrame = None
-    frameMask = None
-    frameMaskApplied = None
-
-    # Create an object
-    resolution = (cfgRS['resolution']['width'], cfgRS['resolution']['height'])
-    rs = rs_interface.rsCamera(resolution, cfgRS['fps'])
-
-    # Create a pipeline
-    rs.createPipeline()
-
-    # Start the pipeline
-    isPipelineStarted = rs.startPipeline()
-
-    # Prepare a notFound image
-    notFoundImage = cv.imread(notFoundImagePath, cv.IMREAD_COLOR)
-
-    while not rospy.is_shutdown():
+        # Create a timer to periodically read frames
+        clock = 0.1  # seconds
+        self.timer = self.create_timer(clock, self.process_frame)
+    
+    def process_frame(self):
         # Check if the frames are valid
-        if not isPipelineStarted:
-            break
-
+        if not self.isPipelineStarted:
+            return
+        
         # Wait for the next frames from the camera
-        frames = rs.grabFrames()
+        frames = self.rs.grabFrames()
         ret = False if frames is None else True
 
         # Check if the frames are valid
         if not ret:
-            break
-
+            self.get_logger().error("No frame captured! Exiting ...")
+            return
+        
         # Get the color frame
-        currFrame, cameraMatrix, distCoeffs = rs.getColorFrame(frames)
+        currFrame, cameraMatrix, distCoeffs = self.rs.getColorFrame(frames)
 
         # Change brightness
-        currFrame = cv.convertScaleAbs(
-            currFrame, alpha=cfgGeneral['brightness']['alpha'], beta=cfgGeneral['brightness']['beta'])
+        beta = float(self.cfgGeneral['brightness']['beta'])
+        alpha = float(self.cfgGeneral['brightness']['alpha'])
+        currFrame = cv.convertScaleAbs(currFrame, alpha=alpha, beta=beta)
 
         # Only the first time, copy the current frame to the previous frame
-        if prevFrame is None:
-            prevFrame = np.copy(currFrame)
+        if self.prevFrame is None:
+            self.prevFrame = np.copy(currFrame)
 
         # Process frames
-        if (cfgMode['temporalSubtraction']):
+        if (self.cfgMode['temporalSubtraction']):
             # Process the frames
             pFrame, cFrame, frameMask = sequentialFrameProcessing(
-                prevFrame, currFrame, True, config)
+                self.prevFrame, currFrame, True, self.configs)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(
                 cFrame, cFrame, mask=frameMask)
         else:
-            # Keep the original frame
-            # cFrameRGB = np.copy(currFrame)
             # Process the frames
             cFrame, frameMask = singleFrameProcessing(
-                currFrame, True, config)
+                currFrame, True, self.configs)
             # Apply the mask
             frameMaskApplied = cv.bitwise_and(
                 cFrame, cFrame, mask=frameMask)
-
+        
         # Camera Params
         camInfoMsgs = getCameraInfo(currFrame.shape, cameraMatrix, distCoeffs)
 
@@ -134,39 +128,50 @@ def main():
         frameMask = cv.cvtColor(frameMask, cv.COLOR_GRAY2BGR)
 
         # Preparing the frames
-        frameRaw = currFrame if ret else notFoundImage
-        frameMask = frameMask if ret else notFoundImage
-        frameMaskApplied = frameMaskApplied if ret else notFoundImage
-        frameRawRos = bridge.cv2_to_imgmsg(frameRaw, "bgr8")
-        frameMaskRos = bridge.cv2_to_imgmsg(frameMask, "bgr8")
-        frameMaskApplied = bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
+        frameRaw = currFrame if ret else self.notFoundImage
+        frameMask = frameMask if ret else self.notFoundImage
+        frameMaskApplied = frameMaskApplied if ret else self.notFoundImage
+        frameRawRos = self.bridge.cv2_to_imgmsg(frameRaw, "bgr8")
+        frameMaskRos = self.bridge.cv2_to_imgmsg(frameMask, "bgr8")
+        frameMaskApplied = self.bridge.cv2_to_imgmsg(frameMaskApplied, "bgr8")
 
         # ArUco marker detection
         frameMarker = arucoDetector(
-            frameMask, cameraMatrix, distCoeffs, cfgMarker['detection']['dictionary'],
-            cfgMarker['structure']['size'])
-        frameMarker = frameMarker if ret else notFoundImage
-        frameMarkerRos = bridge.cv2_to_imgmsg(frameMarker, "bgr8")
+            frameMask, cameraMatrix, distCoeffs, self.cfgMarker['detection']['dictionary'],
+            self.cfgMarker['structure']['size'])
+        frameMarker = frameMarker if ret else self.notFoundImage
+        frameMarkerRos = self.bridge.cv2_to_imgmsg(frameMarker, "bgr8")
 
         # Publishing the frames
-        pubRaw.publish(frameRawRos)
-        pubMask.publish(frameMaskRos)
-        pubMarker.publish(frameMarkerRos)
-        pubCameraParams.publish(camInfoMsgs)
-        pubMaskApplied.publish(frameMaskApplied)
+        self.pubRaw.publish(frameRawRos)
+        self.pubMask.publish(frameMaskRos)
+        self.pubMarker.publish(frameMarkerRos)
+        self.pubCameraParams.publish(camInfoMsgs)
+        self.pubMaskApplied.publish(frameMaskApplied)
 
         # Save the previous frame
-        prevFrame = np.copy(currFrame)
+        self.prevFrame = np.copy(currFrame)
+    
+    def destroy_node(self):
+        if self.isPipelineStarted:
+            self.rs.stopPipeline()
+        self.get_logger().info(
+            f'Framework stopped! [RealSense Single Vision Setup - {self.setupVariant}]')
+        super().destroy_node()
 
-        # Continue publishing
-        rate.sleep()
 
-    # Stop the pipeline and close the windows
-    if isPipelineStarted:
-        rs.stopPipeline()
-    rospy.loginfo(
-        f'Framework stopped! [RealSense Single Vision Setup - {setupVariant}]')
+def main(args=None):
+    rclpy.init(args=args)
+    node = IMarkerDetector()
 
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if rclpy.ok():
+            node.destroy_node()
+            rclpy.shutdown()
 
 # Run the main function
 if __name__ == '__main__':
